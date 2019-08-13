@@ -1,31 +1,20 @@
+# coding: utf-8
 """
-    Утилита управления локальным репозиторием OVAL.
-
-    Утилита является обёрткой для стандартных модулей OVALRepo:
+    Local OVAL repository managment tool.
+    It is a wrapper for several OVALRepo modules:
     oval_decomposition.py
     build_oval_definitions_file.py
 
-    Позволяет вести локальный репозиторий сущностей OVAL (объектов, 
-    определений, тестов) без оглядки на глобальный репозиторий.
-    Это достигается путём создания ложного git-репозитория в окружении
-    скриптов ScriptsEnvironment каждый раз, когда нужно собрать xml-файл.
+    Allows to run local OVAL repository by creating false git environment for it.
 
-    Автор: Денис Яблочкин <denis-yablochkin.ib@yandex.ru>
-    For english reference see README.md file.
+    Author: Denis Yablochkin <denis-yablochkin.ib@yandex.ru>
 """
 import os, shutil, sys
 from git import Repo
 
 def decomposition():
     """
-        Вызов модуля oval_decomposition.py для разложения OVAL xml на
-        составные части - определения, объекты и т.д.
-
-        Для вывода help конкретного модуля:
-        local_repo_mgmt.py -d -h
-
-        Для корректного сбора модулем build необходима следующая секция
-        внутри каждого исходного <definition>:
+        Every module MUST have this part in <definition>:
         <oval_repository>
             <dates>
                 <submitted date="YYYY-MM-DDTHH:MM:SS.000+00:00">
@@ -40,23 +29,6 @@ def decomposition():
 
 
 def build():
-    """
-        Вызов модуля build_oval_definitions_file.py для сбора OVAL xml
-        на основе репозитория.
-
-        Для вывода help конкретного модуля:
-        local_repo_mgmt.py -b -h
-
-        Для корректного сбора модулем build необходима следующая секция
-        внутри каждого исходного <definition>:
-        <oval_repository>
-            <dates>
-                <submitted date="YYYY-MM-DDTHH:MM:SS.000+00:00">
-                    <contributor organization="ORGANISATION">JOHN WICK</contributor>
-                </submitted>
-            </dates>
-        </oval_repository>
-    """
     try:
         shutil.rmtree(os.path.abspath('./ScriptsEnvironment/.git'))
     except:
@@ -76,13 +48,17 @@ def build():
         pass
 
 
-def clear():
+def clear(args):
     """
-        Очищает окружение ScriptsEnvironment от файлов, необходимых для
-        построения репозитория (каталог .git и файл .init). Если таких файлов
-        нет - выводит соответствующее сообщение.
-        Файлы репозиториев и скриптов остаются нетронутыми в любом случае.
+        Clears false git envrionment ScriptsEnvironment.
     """
+    try:
+        if args[1] == '-h':
+            help(clear)
+            return
+    except:
+        pass
+
     try:
         shutil.rmtree(os.path.abspath('./ScriptsEnvironment/.git'))
     except Exception as e:
@@ -92,33 +68,60 @@ def clear():
     except Exception as e:
         print(str(e))
 
+def list(args):
+    """
+        Lists files in repository:
+        -d definitions
+        -t tests
+        -o objects
+        -s states
+        -v variables
+        -a all
+    """
+    try:
+        rootdir=''
+        if args[1] == '-t':
+            rootdir=os.path.relpath('./ScriptsEnvironment/repository/tests')
+        elif args[1] == '-v':
+            rootdir=os.path.relpath('./ScriptsEnvironment/repository/variables')
+        elif args[1] == '-s':
+            rootdir=os.path.relpath('./ScriptsEnvironment/repository/states')
+        elif args[1] == '-o':
+            rootdir=os.path.relpath('./ScriptsEnvironment/repository/objects')
+        elif args[1] == '-d':
+            rootdir=os.path.relpath('./ScriptsEnvironment/repository/definitions')
+        elif args[1] == '-a':
+            rootdir=os.path.relpath('./ScriptsEnvironment/repository/')
+        else:
+            help(list)
+        
+        for subdir, dirs, files in os.walk(rootdir):
+            for file in files:
+                print(os.path.join(subdir, file))
+
+    except IndexError as e:
+        help(list)
+
+    
+    
+
 
 def main(args):
     """
-        Утилита управления локальным репозиторием OVAL.
+        Local OVAL repository managment tool.
 
-        Утилита является обёрткой для стандартных модулей OVALRepo:
-        oval_decomposition.py
-        build_oval_definitions_file.py
+        USAGE
+        Decompose xml-config to it's parts:
+        local_repo_mgmt.py -d [-h]
 
-        Позволяет вести локальный репозиторий сущностей OVAL (объектов, 
-        определений, тестов) без оглядки на глобальный репозиторий.
-        Это достигается путём создания ложного git-репозитория в окружении
-        скриптов ScriptsEnvironment каждый раз, когда нужно собрать xml-файл.
+        Build xml-config:
+        local_repo_mgmt.py -b [-h]
 
-        ИСПОЛЬЗОВАНИЕ
-        Передача управления модулю декомпозиции (разобра) xml-файла:
-        local_repo_mgmt.py -d
+        Clear scripts false git environment:
+        local_repo_mgmt.py -c [-h]
 
-        Передача управления модулю построения xml-файла:
-        local_repo_mgmt.py -b
-
-        Очистка окружения скриптов ScriptsEnvironment:
-        local_repo_mgmt.py -c
-
-        Для вывода help конкретного модуля:
-        local_repo_mgmt.py -d -h
-        local_repo_mgmt.py -b -h
+        List files in repository:
+        local_repo_mgmt.py -l [-adtosv]
 
     """
     try:
@@ -131,31 +134,23 @@ def main(args):
             build()
 
         elif args[1] == '-c':
-            clear()
-
-        elif args[1] == '-h':
+            args.pop(1)
+            clear(args)
+        
+        elif args[1] == '-l':
+            args.pop(1)
+            list(args)
+        else:
             help(main)
-            help(decomposition)
-            help(build)
-            help(clear)
 
     except IndexError:
         help(main)
-        help(decomposition)
-        help(build)
-        help(clear)
 
 
 
 sys.path.insert(1,'./ScriptsEnvironment/scripts')
 import oval_decomposition
 import build_oval_definitions_file
-import build_all_oval_definitions
-
-
-
-
-
 
 main(sys.argv)
 
