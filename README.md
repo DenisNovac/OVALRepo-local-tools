@@ -24,3 +24,18 @@ build_oval_definitions_file.py
 Разбор файла OVAL модулем oval_decomposition просто раскладывает файл на составляющие в окружении OVAL - в папку repository. 
 
 Сбор модулем build_oval_definitions_file.py использует окружение git. Для имитации его работы был использован каталог ScriptsEnvironment. На время работы модуля build_oval_definitions_file.py инициализируется новый git-репозиторий и делается коммит с пустым файлом .init. После этого модуль срабатывает как нужно, а элементы окружения (.git и .init) удаляются. На случай проблем предусмотрен флаг -c, выполняющий удаление автоматически.
+
+
+
+
+
+Exception: '' is not a parseable date
+This means that <oval_repository> tag is not exists or corrupted:
+<oval_repository>
+    <dates>
+        <submitted date="YYYY-MM-DDTHH:MM:SS.000+00:00">
+            <contributor organization="ORGANISATION">JOHN WICK</contributor>
+        </submitted>
+    </dates>
+</oval_repository>
+

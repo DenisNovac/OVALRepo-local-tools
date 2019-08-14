@@ -8,9 +8,15 @@
     Allows to run local OVAL repository by creating false git environment for it.
 
     Author: Denis Yablochkin <denis-yablochkin.ib@yandex.ru>
+    Copyright: https://github.com/CISecurity/OVALRepo
 """
 import os, shutil, sys
 from git import Repo
+# import modules from OVALRepo-scripts
+sys.path.insert(1,'./ScriptsEnvironment/scripts')
+import oval_decomposition
+import build_oval_definitions_file
+
 
 def decomposition():
     """
@@ -39,7 +45,10 @@ def build():
     index = repo.index
     index.add( [ '.init' ] )
     index.commit("init")
-    build_oval_definitions_file.main()
+    try:
+        build_oval_definitions_file.main()
+    except Exception as e:
+        print("ee")
 
     try:
         shutil.rmtree(os.path.abspath('./ScriptsEnvironment/.git'))
@@ -67,6 +76,8 @@ def clear(args):
         os.remove(os.path.abspath('./ScriptsEnvironment/.init'))
     except Exception as e:
         print(str(e))
+
+
 
 def list(args):
     """
@@ -102,8 +113,6 @@ def list(args):
     except IndexError as e:
         help(list)
 
-    
-    
 
 
 def main(args):
@@ -121,7 +130,7 @@ def main(args):
         local_repo_mgmt.py -c [-h]
 
         List files in repository:
-        local_repo_mgmt.py -l [-adtosv]
+        local_repo_mgmt.py -l [-adtosvh]
 
     """
     try:
@@ -147,10 +156,7 @@ def main(args):
         help(main)
 
 
+if __name__ == '__main__':
+    main(sys.argv)
 
-sys.path.insert(1,'./ScriptsEnvironment/scripts')
-import oval_decomposition
-import build_oval_definitions_file
-
-main(sys.argv)
 
