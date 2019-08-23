@@ -8,7 +8,10 @@
     Allows to run local OVAL repository by creating false git environment for it.
 
     Author: Denis Yablochkin <denis-yablochkin.ib@yandex.ru>
+    
+    
     Copyright: https://github.com/CISecurity/OVALRepo
+    Copyright© 2010 United States Government. All Rights Reserved.
 """
 import os, shutil, sys
 from git import Repo
@@ -81,14 +84,26 @@ def clear(args):
 
 def list(args):
     """
-        Lists files in repository:
+        Lists files in repository.
+        Category (second arg):
+        -a all
         -d definitions
         -t tests
         -o objects
         -s states
         -v variables
-        -a all
+
+        Formatting (third arg):
+        -f for full paths without categories
+        -l for local total files calculation
     """
+    isFull=False
+    isLocalTotal=False
+    try:
+        if args[2] == '-f': isFull=True
+        if args[2] == '-l': isLocalTotal=True
+    except: pass
+
     try:
         rootdir=''
         if args[1] == '-t':
@@ -105,11 +120,36 @@ def list(args):
             rootdir=os.path.relpath('./ScriptsEnvironment/repository/')
         else:
             help(list)
-        
+
+        calc=0
+        local_calc=0
+        lastflag=""
+        flag=""
         for subdir, dirs, files in os.walk(rootdir):
             for file in files:
-                print(os.path.join(subdir, file))
+                path=os.path.join(subdir, file)
+                if not isFull:
+                    short_path=path.split(os.path.relpath("ScriptsEnvironment/repository/"))[1]
+                    flag=short_path.split(os.sep)[1]
+                    nc_path=short_path.replace(flag+os.sep,"")
+                    local_calc=local_calc+1
+                    if not lastflag==flag:
+                        if not lastflag=="" and isLocalTotal:
+                            print("\tTotal in category: "+str(local_calc))
+                        local_calc=0
+                        print(flag+": ")
+                        lastflag=flag
+                        
 
+                    print("\t"+nc_path)
+                else:
+                    print(path)
+                calc=calc+1
+        if not isFull and isLocalTotal:
+            local_calc=local_calc+1
+            print("\tTotal in category: "+str(local_calc))
+        print("Total: "+str(calc))
+        
     except IndexError as e:
         help(list)
 
@@ -130,7 +170,7 @@ def main(args):
         local_repo_mgmt.py -c [-h]
 
         List files in repository:
-        local_repo_mgmt.py -l [-adtosvh]
+        local_repo_mgmt.py -l [-adtosvh] [-fl]
 
     """
     try:
