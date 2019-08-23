@@ -31,6 +31,8 @@ build_oval_definitions_file.py
 
 Exception: '' is not a parseable date
 This means that <oval_repository> tag is not exists or corrupted:
+
+'''
 <oval_repository>
     <dates>
         <submitted date="YYYY-MM-DDTHH:MM:SS.000+00:00">
@@ -38,4 +40,5 @@ This means that <oval_repository> tag is not exists or corrupted:
         </submitted>
     </dates>
 </oval_repository>
+'''
 
