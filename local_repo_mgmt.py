@@ -13,7 +13,7 @@
     Copyright: https://github.com/CISecurity/OVALRepo
     Copyright© 2010 United States Government. All Rights Reserved.
 """
-import os, shutil, sys
+import os, shutil, sys, datetime
 from git import Repo
 # import modules from OVALRepo-scripts
 sys.path.insert(1,'./ScriptsEnvironment/scripts')
@@ -21,7 +21,7 @@ import oval_decomposition
 import build_oval_definitions_file
 
 
-def decomposition():
+def decomposition( removeAfter=False ):
     """
         Every module MUST have this part in <definition>:
         <oval_repository>
@@ -35,16 +35,26 @@ def decomposition():
     """
     oval_decomposition.main()
 
+    if removeAfter:
+        path = os.path.relpath(sys.argv[2])
+        try:
+            os.mkdir(os.path.relpath('./.decomposed'))
+            os.system("attrib +h " + os.path.relpath('./.decomposed'))
+        except:
+            pass
+        time=datetime.datetime.now()
+        ts=str(datetime.datetime.timestamp(time))
+        shutil.move(path,os.path.relpath('./.decomposed/'+ts+' '+path))
 
 
 def build():
     try:
-        shutil.rmtree(os.path.abspath('./ScriptsEnvironment/.git'))
+        shutil.rmtree(os.path.relpath('./ScriptsEnvironment/.git'))
     except:
         pass
     
-    open(os.path.abspath('./ScriptsEnvironment/.init'), 'w').close()
-    repo = Repo.init(os.path.abspath('./ScriptsEnvironment'))
+    open(os.path.relpath('./ScriptsEnvironment/.init'), 'w').close()
+    repo = Repo.init(os.path.relpath('./ScriptsEnvironment'))
     index = repo.index
     index.add( [ '.init' ] )
     index.commit("init")
@@ -54,13 +64,13 @@ def build():
         print("ee")
 
     try:
-        shutil.rmtree(os.path.abspath('./ScriptsEnvironment/.git'))
-        os.remove(os.path.abspath('./ScriptsEnvironment/.init'))
+        shutil.rmtree(os.path.relpath('./ScriptsEnvironment/.git'))
+        os.remove(os.path.relpath('./ScriptsEnvironment/.init'))
     except:
         pass
 
 
-def clear(args):
+def clear( args, removeDecomposed=False ):
     """
         Clears false git envrionment ScriptsEnvironment.
     """
@@ -72,13 +82,22 @@ def clear(args):
         pass
 
     try:
-        shutil.rmtree(os.path.abspath('./ScriptsEnvironment/.git'))
+        shutil.rmtree(os.path.relpath('./ScriptsEnvironment/.git'))
+        print('removed ./ScriptsEnvironment/.git')
     except Exception as e:
         print(str(e))
     try:
-        os.remove(os.path.abspath('./ScriptsEnvironment/.init'))
+        os.remove(os.path.relpath('./ScriptsEnvironment/.init'))
+        print('removed ./ScriptsEnvironment/.init')
     except Exception as e:
         print(str(e))
+    
+    if removeDecomposed:
+        try:
+            shutil.rmtree(os.path.relpath('./.decomposed'))
+            print('removed ./.decomposed')
+        except Exception as e:
+            print(str(e))
 
 
 
@@ -161,13 +180,15 @@ def main(args):
 
         USAGE
         Decompose xml-config to it's parts:
-        local_repo_mgmt.py -d [-h]
+        local_repo_mgmt.py -d[r] [-h]
+        -dr will move decomposed file to .decomposed folder
 
         Build xml-config:
         local_repo_mgmt.py -b [-h]
 
         Clear scripts false git environment:
-        local_repo_mgmt.py -c [-h]
+        local_repo_mgmt.py -c[r] [-h]
+        -cr will remove .decomposed folder
 
         List files in repository:
         local_repo_mgmt.py -l [-adtosvh] [-fl]
@@ -178,13 +199,21 @@ def main(args):
             args.pop(1) 
             decomposition()
 
+        elif args[1]=='-dr':
+            args.pop(1)
+            decomposition( True )
+
         elif args[1]=='-b':
             args.pop(1)
             build()
 
         elif args[1] == '-c':
             args.pop(1)
-            clear(args)
+            clear( args )
+
+        elif args[1] == '-cr':
+            args.pop(1)
+            clear( args, True )
         
         elif args[1] == '-l':
             args.pop(1)
