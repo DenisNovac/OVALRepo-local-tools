@@ -33,19 +33,37 @@ def decomposition( removeAfter=False ):
         </oval_repository>
         
     """
-    oval_decomposition.main()
+    # folder check
+    input_path=os.sys.argv[2]
 
-    if removeAfter:
-        path = os.path.relpath(sys.argv[2])
-        try:
-            os.mkdir(os.path.relpath('./.decomposed'))
-            os.system("attrib +h " + os.path.relpath('./.decomposed'))
-        except:
-            pass
-        time=datetime.datetime.now()
-        ts=str(datetime.datetime.timestamp(time))
-        shutil.move(path,os.path.relpath('./.decomposed/'+ts+' '+path))
+    configs = [ ]
+    if input_path[len(input_path)-1] == os.sep:
+        configs_root = os.path.abspath(input_path)
+        file_list=os.listdir(os.path.relpath(input_path))
+        for file in file_list:
+            configs.append(configs_root+os.sep+file)
+    else:
+        configs.append(os.path.abspath(os.sys.argv[2]))
+    
+    for config in configs:
+        sys.stdout.write("Decomposing "+config+" ...")
+        sys.argv[2]=config
+    
+        oval_decomposition.main()
 
+        if removeAfter:
+            config_name=config.split(os.sep)[len(config.split(os.sep))-1]
+            path = os.path.abspath(sys.argv[2])
+            try:
+                os.mkdir(os.path.abspath('./.decomposed'))
+                os.system("attrib +h " + os.path.abspath('./.decomposed'))
+            except:
+                pass
+            time=datetime.datetime.now()
+            ts=str(datetime.datetime.timestamp(time))
+            shutil.move(path,os.path.abspath('./.decomposed/'+ts+' '+config_name))
+
+        sys.stdout.write(" Success\n")
 
 def build():
     try:
@@ -182,6 +200,7 @@ def main(args):
         Decompose xml-config to it's parts:
         local_repo_mgmt.py -d[r] [-h]
         -dr will move decomposed file to .decomposed folder
+        if -f argument after -d is FOLDER, it will attempt to decompose all files in folder
 
         Build xml-config:
         local_repo_mgmt.py -b [-h]
