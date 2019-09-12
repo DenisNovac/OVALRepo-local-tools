@@ -212,7 +212,7 @@ def list(args):
 
 def main(args):
     """
-        Local OVAL repository managment tool.
+        Local OVAL repository managment tool
 
         USAGE
         Building and decomposing work with ./ScriptsEnvironment/repository folder.
