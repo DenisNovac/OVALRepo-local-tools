@@ -21,7 +21,7 @@ import oval_decomposition
 import build_oval_definitions_file
 
 
-def decomposition( removeAfter=False ):
+def decomposition( auto_remove_decomposed=False ):
     """
         Every module MUST have this part in <definition>:
         <oval_repository>
@@ -33,8 +33,13 @@ def decomposition( removeAfter=False ):
         </oval_repository>
         
     """
-    # folder check
-    input_path=os.sys.argv[2]
+    # need to call decompose module help if there is no more arguments
+    input_path = ''
+    try:
+        input_path=os.sys.argv[2]
+    except IndexError:
+        oval_decomposition.main()
+        return
 
     configs = [ ]
     if input_path[len(input_path)-1] == os.sep:
@@ -51,7 +56,7 @@ def decomposition( removeAfter=False ):
     
         oval_decomposition.main()
 
-        if removeAfter:
+        if auto_remove_decomposed:
             config_name=config.split(os.sep)[len(config.split(os.sep))-1]
             path = os.path.abspath(sys.argv[2])
             try:
@@ -79,7 +84,7 @@ def build():
     try:
         build_oval_definitions_file.main()
     except Exception as e:
-        print("ee")
+        print(str(e))
 
     try:
         shutil.rmtree(os.path.relpath('./ScriptsEnvironment/.git'))
@@ -88,16 +93,21 @@ def build():
         pass
 
 
-def clear( args, removeDecomposed=False ):
+def clear( args, clear_decomposed_folder=False ):
     """
-        Clears false git envrionment ScriptsEnvironment.
+        Clears files and folders:
+        ./ScriptsEnvironment/.git/
+        ./ScriptsEnvironment/.init
+        ./ScriptsEnvironment/scripts/__pycache__/
+        ./ScriptsEnvironment/scripts/__index__/
+
+        If specified like -cd will also remove folder:
+        ./.decomposed
     """
-    try:
-        if args[1] == '-h':
-            help(clear)
-            return
-    except:
-        pass
+
+    if len(args)>1:
+        help(clear)
+        return
 
     try:
         shutil.rmtree(os.path.relpath('./ScriptsEnvironment/.git'))
@@ -109,8 +119,17 @@ def clear( args, removeDecomposed=False ):
         print('removed ./ScriptsEnvironment/.init')
     except Exception as e:
         print(str(e))
-    
-    if removeDecomposed:
+    try:
+        shutil.rmtree(os.path.relpath('./ScriptsEnvironment/scripts/__pycache__'))
+        print('removed __pycache__')
+    except Exception as e:
+        print(str(e))
+    try:
+        shutil.rmtree(os.path.relpath('./ScriptsEnvironment/scripts/__index__'))
+        print('removed __index__')
+    except Exception as e:
+        print(str(e))
+    if clear_decomposed_folder:
         try:
             shutil.rmtree(os.path.relpath('./.decomposed'))
             print('removed ./.decomposed')
@@ -176,8 +195,6 @@ def list(args):
                         local_calc=0
                         print(flag+": ")
                         lastflag=flag
-                        
-
                     print("\t"+nc_path)
                 else:
                     print(path)
@@ -188,6 +205,7 @@ def list(args):
         print("Total: "+str(calc))
         
     except IndexError as e:
+        print(str(e))
         help(list)
 
 
@@ -197,22 +215,28 @@ def main(args):
         Local OVAL repository managment tool.
 
         USAGE
-        Decompose xml-config to it's parts:
-        local_repo_mgmt.py -d[r] [-h]
-        -dr will move decomposed file to .decomposed folder
-        if -f argument after -d is FOLDER, it will attempt to decompose all files in folder
+        Building and decomposing work with ./ScriptsEnvironment/repository folder.
 
-        Build xml-config:
+        * DECOMPOSE xml-config to parts (definitions, objects etc):
+        local_repo_mgmt.py -d[r] [-h]
+        -dr will move decomposed file to .decomposed folder.
+        if PATH to decompose file (-d -f <PATH>) is folder - it will decompose every file in it (without subfolders).
+        NOTE: Decomposing will ALWAYS replace files with equals ID. Use -l -a to check IDs in your repository.
+
+
+        * BUILD xml-config from repository:
         local_repo_mgmt.py -b [-h]
 
-        Clear scripts false git environment:
-        local_repo_mgmt.py -c[r] [-h]
-        -cr will remove .decomposed folder
 
-        List files in repository:
+        * CLEAR scripts false git environment:
+        local_repo_mgmt.py -c[d] [-h]
+        -cd will also remove .decomposed folder.
+
+
+        * LIST files in repository:
         local_repo_mgmt.py -l [-adtosvh] [-fl]
-
     """
+
     try:
         if args[1]=='-d':
             args.pop(1) 
@@ -220,7 +244,7 @@ def main(args):
 
         elif args[1]=='-dr':
             args.pop(1)
-            decomposition( True )
+            decomposition( auto_remove_decomposed=True )
 
         elif args[1]=='-b':
             args.pop(1)
@@ -230,9 +254,9 @@ def main(args):
             args.pop(1)
             clear( args )
 
-        elif args[1] == '-cr':
+        elif args[1] == '-cd':
             args.pop(1)
-            clear( args, True )
+            clear( args, clear_decomposed_folder=True )
         
         elif args[1] == '-l':
             args.pop(1)
