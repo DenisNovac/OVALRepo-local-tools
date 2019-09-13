@@ -17,8 +17,10 @@ import os, shutil, sys, datetime
 from git import Repo
 # import modules from OVALRepo-scripts
 sys.path.insert(1,'./ScriptsEnvironment/scripts')
-import oval_decomposition
-import build_oval_definitions_file
+import ScriptsEnvironment.scripts.oval_decomposition as oval_decomposition
+import ScriptsEnvironment.scripts.build_oval_definitions_file as build_oval_definitions_file
+
+import ScriptsEnvironment.scripts.definition_title_reader as definition_title_reader
 
 
 def decomposition( auto_remove_decomposed=False ):
@@ -153,6 +155,8 @@ def list(args):
         -f for full paths without categories
         -l for local total files calculation
     """
+    isDefInfo = True
+
     isFull=False
     isLocalTotal=False
     try:
@@ -195,8 +199,14 @@ def list(args):
                         local_calc=0
                         print(flag+": ")
                         lastflag=flag
-                    print("\t"+nc_path)
+                    # вывод укороченной версии имени
+                    title = ''
+                    if flag=='definitions' and isDefInfo:
+                        title = definition_title_reader.read_title(path)
+                    print('\t'+nc_path + '\t ' + title)
+                    
                 else:
+                    # вывод полной версии имени
                     print(path)
                 calc=calc+1
         if not isFull and isLocalTotal:
