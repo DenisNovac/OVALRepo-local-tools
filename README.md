@@ -2,7 +2,7 @@
 
 Author: Denis Yablochkin <denis-yablochkin.ib@yandex.ru>
 
-ScriptsEnvironment/scripts copyright: [CISecurity]([https://github.com/CISecurity/OVALRepo/]).
+ScriptsEnvironment/scripts copyright: [CISecurity]([https://github.com/CISecurity/OVALRepo/](https://github.com/CISecurity/OVALRepo/)).
 
 This tool is a wrapper for CISecurity OVALRepo modules:
 
