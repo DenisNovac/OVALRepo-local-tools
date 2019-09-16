@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<oval_definitions
+	xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5"
+	xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-common-5 oval-common-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5 oval-definitions-schema.xsd">
+
+	<generator>
+		<oval:product_name>CIS OVAL Repository</oval:product_name>
+		<oval:product_version>0.1</oval:product_version>
+		<oval:schema_version>5.11.2</oval:schema_version>
+		<oval:timestamp>2019-09-16T07:33:00</oval:timestamp>
+	</generator>
+		
+	<definitions>		<oval-def:definition xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" class="inventory" id="oval:datapk.ussc.ru-masterscada:def:2019001" version="1">
+		  <oval-def:metadata>
+		    <oval-def:title>MasterSCADA установлена</oval-def:title>
+		    <oval-def:description>MasterSCADA installed on the computer</oval-def:description>
+		    <oval-def:oval_repository>
+		      <oval-def:dates>
+		        <oval-def:submitted date="2019-08-20T14:55:00.000+05:00">
+		          <oval-def:contributor organization="USSC">Denis Yablochkin</oval-def:contributor>
+		        </oval-def:submitted>
+		      </oval-def:dates>
+		    </oval-def:oval_repository>
+		    <oval-def:affected family="windows">
+		      <oval-def:product>masterscada</oval-def:product>
+		      <oval-def:product>MasterSCADA</oval-def:product>
+		    </oval-def:affected>
+		  </oval-def:metadata>
+		  <oval-def:criteria>
+		    <oval-def:criterion test_ref="oval:datapk.ussc.ru-masterscada:tst:2019001" />
+		  </oval-def:criteria>
+		</oval-def:definition>
+		
+		<oval-def:definition xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" class="vulnerability" id="oval:datapk.ussc.ru-masterscada:def:2019002" version="1">
+		  <oval-def:metadata>
+		    <oval-def:title>BDU:2019-02179 уязвимость пакета MasterSCADA</oval-def:title>
+		    <oval-def:description>Эксплуатация уязвимости может позволить нарушителю, действующему удалённо, вызвать отказ в обслуживании при помощи специально сформированной математической формулы большой длины (или с большими значениями параметров математической формулы).</oval-def:description>
+		    <oval-def:bdu>
+		      <oval-def:severity>Низкий</oval-def:severity>
+		      <oval-def:remediation>Выполнить обновление MasterSCADA до v3.10</oval-def:remediation>
+		      <oval-def:cvssv20>AV:N/AC:H/Au:N/C:N/I:N/A:P</oval-def:cvssv20>
+		    </oval-def:bdu>
+		    <oval-def:oval_repository>
+		      <oval-def:dates>
+		        <oval-def:submitted date="2019-08-20T14:55:00.000+05:00">
+		          <oval-def:contributor organization="USSC">Denis Yablochkin</oval-def:contributor>
+		        </oval-def:submitted>
+		      </oval-def:dates>
+		    </oval-def:oval_repository>
+		    <oval-def:reference ref_id="BDU:2019-02179" ref_url="https://bdu.fstec.ru/ubi/vul/view/id/15672" source="BDU" />
+		    <oval-def:affected family="windows">
+		      <oval-def:product>masterscada</oval-def:product>
+		      <oval-def:product>MasterSCADA</oval-def:product>
+		    </oval-def:affected>
+		  </oval-def:metadata>
+		  <oval-def:criteria operator="AND">
+		    <oval-def:extend_definition comment="MasterScada is installed" definition_ref="oval:datapk.ussc.ru-masterscada:def:2019001" />
+		    <oval-def:criterion test_ref="oval:datapk.ussc.ru-masterscada:tst:2019002" />
+		  </oval-def:criteria>
+		</oval-def:definition>
+		
+	</definitions>
+
+	<tests>		<registry_test xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" check="at least one" check_existence="at_least_one_exists" comment="Check if MasterSCADA installed" id="oval:datapk.ussc.ru-masterscada:tst:2019001" version="1">
+		  <object object_ref="oval:datapk.ussc.ru-masterscada:obj:2019001" />
+		</registry_test>
+		
+		<registry_test xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" check="at least one" check_existence="at_least_one_exists" comment="Check if MasterSCADA vulnerable" id="oval:datapk.ussc.ru-masterscada:tst:2019002" version="1">
+		  <object object_ref="oval:datapk.ussc.ru-masterscada:obj:2019002" />
+		  <state state_ref="oval:datapk.ussc.ru-masterscada:ste:2019002" />
+		</registry_test>
+		
+	</tests>
+
+	<objects>		<registry_object xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" comment="x64 and x32 registry paths" id="oval:datapk.ussc.ru-masterscada:obj:2019001" version="1">
+		  <set set_operator="UNION">
+		    <object_reference>oval:datapk.ussc.ru-masterscada:obj:2019101</object_reference>
+		    <object_reference>oval:datapk.ussc.ru-masterscada:obj:2019102</object_reference>
+		    <filter action="include">oval:datapk.ussc.ru-masterscada:ste:2019001</filter>
+		  </set>
+		</registry_object>
+		
+		<registry_object xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" comment="Masterscada version from path" id="oval:datapk.ussc.ru-masterscada:obj:2019002" version="1">
+		  <hive>HKEY_LOCAL_MACHINE</hive>
+		  <key var_check="at least one" var_ref="oval:datapk.ussc.ru-masterscada:var:2019001" />
+		  <name>DisplayVersion</name>
+		</registry_object>
+		
+		<registry_object xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" comment="MasterSCADA in wow6432node uninstall" id="oval:datapk.ussc.ru-masterscada:obj:2019101" version="1">
+		  <behaviors windows_view="64_bit" />
+		  <hive>HKEY_LOCAL_MACHINE</hive>
+		  <key operation="pattern match">^SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\.*$</key>
+		  <name>DisplayName</name>
+		</registry_object>
+		
+		<registry_object xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" comment="MasterSCADA in uninstall" id="oval:datapk.ussc.ru-masterscada:obj:2019102" version="1">
+		  <hive>HKEY_LOCAL_MACHINE</hive>
+		  <key operation="pattern match">^SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\.*$</key>
+		  <name>DisplayName</name>
+		</registry_object>
+		
+	</objects>
+
+	<states>		<registry_state xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" id="oval:datapk.ussc.ru-masterscada:ste:2019001" version="1">
+		  <value operation="pattern match">(?i)(.*MasterSCADA.*)$</value>
+		</registry_state>
+		
+		<registry_state xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" id="oval:datapk.ussc.ru-masterscada:ste:2019002" version="1">
+		  <value datatype="version" operation="less than">3.10</value>
+		</registry_state>
+		
+	</states>
+
+	<variables>		<oval-def:local_variable xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" comment="Full key path of MasterSCADA from uninstall registry key" datatype="string" id="oval:datapk.ussc.ru-masterscada:var:2019001" version="1">
+		  <oval-def:object_component item_field="key" object_ref="oval:datapk.ussc.ru-masterscada:obj:2019001" />
+		</oval-def:local_variable>
+		
+	</variables>
+
+</oval_definitions>

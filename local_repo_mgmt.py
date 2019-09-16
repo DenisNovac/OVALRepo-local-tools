@@ -13,7 +13,7 @@
     Copyright: https://github.com/CISecurity/OVALRepo
     Copyright© 2010 United States Government. All Rights Reserved.
 """
-import os, shutil, sys, datetime
+import os, shutil, sys, datetime, re
 from git import Repo
 # import modules from OVALRepo-scripts
 sys.path.insert(1,'./ScriptsEnvironment/scripts')
@@ -203,6 +203,11 @@ def list(args):
                     title = ''
                     if flag=='definitions' and isDefInfo:
                         title = definition_title_reader.read_title(path)
+                    
+                    # замена _ на : в id
+                    spl = nc_path.split(os.sep)
+                    spl[len(spl)-1] = spl[len(spl)-1].replace('_',':')
+                    nc_path = os.sep.join(spl).replace('.xml','')
                     print('\t'+nc_path + '\t ' + title)
                     
                 else:
