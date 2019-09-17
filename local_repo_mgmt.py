@@ -20,7 +20,7 @@ sys.path.insert(1,'./ScriptsEnvironment/scripts')
 import ScriptsEnvironment.scripts.oval_decomposition as oval_decomposition
 import ScriptsEnvironment.scripts.build_oval_definitions_file as build_oval_definitions_file
 
-import ScriptsEnvironment.scripts.definition_title_reader as definition_title_reader
+import modules.definition_title_reader as definition_title_reader
 
 
 def decomposition( auto_remove_decomposed=False ):
@@ -110,7 +110,6 @@ def clear( args, clear_decomposed_folder=False ):
     if len(args)>1:
         help(clear)
         return
-
     try:
         shutil.rmtree(os.path.relpath('./ScriptsEnvironment/.git'))
         print('removed ./ScriptsEnvironment/.git')
@@ -124,6 +123,11 @@ def clear( args, clear_decomposed_folder=False ):
     try:
         shutil.rmtree(os.path.relpath('./ScriptsEnvironment/scripts/__pycache__'))
         print('removed __pycache__')
+    except Exception as e:
+        print(str(e))
+    try:
+        shutil.rmtree(os.path.relpath('./modules/__pycache__'))
+        print('removed modules __pycache__')
     except Exception as e:
         print(str(e))
     try:
