@@ -2,10 +2,19 @@ import os
 import xml.etree.ElementTree as ET
 import sys
 import datetime
+import argparse
 from RecursiveXMLSearcher import RecursiveXMLSearcher
 
+parser = argparse.ArgumentParser(description='This tool will authomatically check the oval_repository field in all definitions. If there is no such field - the tool will add it. New file will be saved in *original-name*-formatted.xml.')
+parser.add_argument('path', help='Path to XML with definition')
+parser.add_argument('contributor', help='Name of the contributor')
+parser.add_argument('organization', help='Name of the contributor\'s organization')
 
-def check_for_timestamps( path, contributor, organization ):
+def check_for_timestamps( args ):
+    path = args['path']
+    contributor = args['contributor']
+    organization = args['organization']
+
     rs = RecursiveXMLSearcher()
     tree = ET.parse(path)
     root = tree.getroot()
@@ -18,7 +27,6 @@ def check_for_timestamps( path, contributor, organization ):
     for d in definitions:
         #print(d[0][0].text)
 
-        
         is_ov_rep=False
         is_dates=False
         is_subm=False
@@ -28,7 +36,6 @@ def check_for_timestamps( path, contributor, organization ):
         dates = None
         sumb = None
         cont = None
-
 
         ov_rep = rs.search_one(d,'oval_repository$')
         
@@ -49,10 +56,10 @@ def check_for_timestamps( path, contributor, organization ):
                 else:
                     print(d[0][0].text+' submitted: FALSE')
             else:
-                print(d[0][0].text+' dates:FALSE')
+                print(d[0][0].text+' dates: FALSE')
             
         else:
-            print(d[0][0].text+' oval_repository:FALSE')
+            print(d[0][0].text+' oval_repository: FALSE')
 
 
         # now writing changes
@@ -66,22 +73,23 @@ def check_for_timestamps( path, contributor, organization ):
             dates = ET.SubElement(ov_rep,'ns0:dates')
         if not is_subm:
             subm = ET.SubElement(dates, 'ns0:submitted')
-            today = datetime.date.today()
+            today = datetime.datetime.today()
             timestamp = today.strftime('%Y-%m-%dT%H:%M:%S.000+00:00')
             subm.set('date',timestamp)
         if not is_cont:
             cont = ET.SubElement(subm,'ns0:contributor')
             cont.set('organization',organization)
-            cont.text=contributor+' with autoformat'
+            cont.text=contributor
             is_changed=True
 
     if is_changed:
-        print('Writing changes to disk...')
+        new_name = path.split('.xml')[0]+'-formatted.xml'
+        print('Writing changes to '+new_name)
         data = ET.tostring(root)
-        with open(path.split('.xml')[0]+'-formatted.xml','wb') as file:
+        with open(new_name,'wb') as file:
             file.write(data)
-            
+    else:
+        print('All definitions is good. Exiting.')        
     return
 
-
-check_for_timestamps(sys.argv[1], 'Denis Yablochkin', 'USSC')
+check_for_timestamps(vars(parser.parse_args()))

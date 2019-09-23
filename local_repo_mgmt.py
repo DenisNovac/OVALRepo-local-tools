@@ -13,28 +13,17 @@
     Copyright: https://github.com/CISecurity/OVALRepo
     Copyright© 2010 United States Government. All Rights Reserved.
 """
-import os, shutil, sys, datetime, re
+import os, shutil, sys, datetime, re, argparse
 from git import Repo
 # import modules from OVALRepo-scripts
 sys.path.insert(1,'./ScriptsEnvironment/scripts')
 import ScriptsEnvironment.scripts.oval_decomposition as oval_decomposition
 import ScriptsEnvironment.scripts.build_oval_definitions_file as build_oval_definitions_file
-
+# import my custom modules
 import modules.definition_title_reader as definition_title_reader
 
 
 def decomposition( auto_remove_decomposed=False ):
-    """
-        Every module MUST have this part in <definition>:
-        <oval_repository>
-            <dates>
-                <submitted date="YYYY-MM-DDTHH:MM:SS.000+00:00">
-                    <contributor organization="ORGANISATION">JOHN WICK</contributor>
-                </submitted>
-            </dates>
-        </oval_repository>
-        
-    """
     # need to call decompose module help if there is no more arguments
     input_path = ''
     try:
@@ -54,6 +43,7 @@ def decomposition( auto_remove_decomposed=False ):
     
     for config in configs:
         sys.stdout.write("Decomposing "+config+" ...")
+        sys.stdout.flush()
         sys.argv[2]=config
     
         oval_decomposition.main()
@@ -71,6 +61,7 @@ def decomposition( auto_remove_decomposed=False ):
             shutil.move(path,os.path.abspath('./.decomposed/'+ts+' '+config_name))
 
         sys.stdout.write(" Success\n")
+        sys.stdout.flush()
 
 def build():
     try:
@@ -286,8 +277,10 @@ def main(args):
     except IndexError:
         help(main)
 
-
+#main_parser = argparse.ArgumentParser(description='Local OVAL Repository managment tool.')
+#main_parser.add_argument('option', choices=['decompose', 'build', 'list', 'clear'], help='Options: \n decompose - decompose xml to repository of simple objects; build - build from simple objects in repository to xml; list - show all objects in repository; clear - clear python cache and fake git environment.')
 if __name__ == '__main__':
     main(sys.argv)
+    #main(vars(main_parser.parse_args()))
 
 
