@@ -24,6 +24,14 @@
 
 Поэтому она требует все те же библиотеки (смотри requirements.txt), что и оригинальный набор инструментов. Для Windows имеется скрипт bat для установки требуемых библиотек из PIP.
 
+Кроме того, в обёртке используется несколько дополнительных модулей (папка modules). Список модулей представлен ниже:
+
+- definition_file_reader.py - модуль для вычитки поля title из определения, используется при выводе списка определений в репозитории;
+
+- RecursiveXMLSearcher.py - модуль для поиска xml-тегов в файле. Является классом с приватными рекурсивными методами (их использовать руками не надо) и публичными методами search_one и search_all. Оба модуля возвращают ссылки на нужные теги. Модуль используется в time_stomper.py;
+
+- time_stomper.py - модуль для "подделки" тега oval_repository в требуемом файле. Может быть использован когда необходимо разложить в репозиторий файл, в котором нет тега oval_repository. Такой файл невозможно собрать обратно, поэтому сначала к нему следует дописать валидный тег oval_repository, а только затем разбирать на составляющие. Эта утилита делает это автоматически и быстро обрабатывает даже крупные файлы.
+
 ## Принцип работы
 
 Папка ScriptsEnvironment содержит папку scripts с модулями. Управление этим модулям передаётся в зависимости от ключа (-d для oval_decomposition и -b для build_oval_definitions_file). При работе с ними в каталоге ScriptsEnvironment создаётся временный репозиторий git, необходимый для корректной работы. Разобранные файлы помещаются в каталоге repository.
@@ -35,74 +43,74 @@
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <oval_definitions
-	xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5"
-	xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-common-5 oval-common-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5 oval-definitions-schema.xsd">
+    xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5"
+    xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-common-5 oval-common-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5 oval-definitions-schema.xsd">
 
-	<generator>
-		<oval:product_name>CIS OVAL Repository</oval:product_name>
-		<oval:product_version>0.1</oval:product_version>
-		<oval:schema_version>5.10.1</oval:schema_version>
-		<oval:timestamp>2019-09-16T06:47:34</oval:timestamp>
-	</generator>
-		
-	<definitions>		<definition xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" class="inventory" id="oval:datapk.ussc.ru-masterscada:def:2019001" version="1">
-		  <metadata>
-		    <title>MasterSCADA установлена</title>
-		    <description>MasterSCADA installed on the computer</description>
-		    <oval_repository>
-		      <dates>
-		        <submitted date="2019-08-20T14:55:00.000+05:00">
-		          <contributor organization="USSC">Denis Yablochkin</contributor>
-		        </submitted>
-		      </dates>
-		    </oval_repository>
-		    <affected family="windows">
-		      <product>masterscada</product>
-		      <product>MasterSCADA</product>
-		    </affected>
-		  </metadata>
-		  <criteria>
-		    <criterion test_ref="oval:datapk.ussc.ru-masterscada:tst:2019001" />
-		  </criteria>
-		</definition>
-		
-	</definitions>
+    <generator>
+        <oval:product_name>CIS OVAL Repository</oval:product_name>
+        <oval:product_version>0.1</oval:product_version>
+        <oval:schema_version>5.10.1</oval:schema_version>
+        <oval:timestamp>2019-09-16T06:47:34</oval:timestamp>
+    </generator>
 
-	<tests>		<registry_test xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" check="at least one" check_existence="at_least_one_exists" comment="Check if MasterSCADA installed" id="oval:datapk.ussc.ru-masterscada:tst:2019001" version="1">
-		  <object object_ref="oval:datapk.ussc.ru-masterscada:obj:2019001" />
-		</registry_test>
-		
-	</tests>
+    <definitions>        <definition xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" class="inventory" id="oval:datapk.ussc.ru-masterscada:def:2019001" version="1">
+          <metadata>
+            <title>MasterSCADA установлена</title>
+            <description>MasterSCADA installed on the computer</description>
+            <oval_repository>
+              <dates>
+                <submitted date="2019-08-20T14:55:00.000+05:00">
+                  <contributor organization="USSC">Denis Yablochkin</contributor>
+                </submitted>
+              </dates>
+            </oval_repository>
+            <affected family="windows">
+              <product>masterscada</product>
+              <product>MasterSCADA</product>
+            </affected>
+          </metadata>
+          <criteria>
+            <criterion test_ref="oval:datapk.ussc.ru-masterscada:tst:2019001" />
+          </criteria>
+        </definition>
 
-	<objects>		<registry_object xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" comment="x64 and x32 registry paths" id="oval:datapk.ussc.ru-masterscada:obj:2019001" version="1">
-		  <set set_operator="UNION">
-		    <object_reference>oval:datapk.ussc.ru-masterscada:obj:2019101</object_reference>
-		    <object_reference>oval:datapk.ussc.ru-masterscada:obj:2019102</object_reference>
-		    <filter action="include">oval:datapk.ussc.ru-masterscada:ste:2019001</filter>
-		  </set>
-		</registry_object>
-		
-		<registry_object xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" comment="MasterSCADA in wow6432node uninstall" id="oval:datapk.ussc.ru-masterscada:obj:2019101" version="1">
-		  <behaviors windows_view="64_bit" />
-		  <hive>HKEY_LOCAL_MACHINE</hive>
-		  <key operation="pattern match">^SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\.*$</key>
-		  <name>DisplayName</name>
-		</registry_object>
-		
-		<registry_object xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" comment="MasterSCADA in uninstall" id="oval:datapk.ussc.ru-masterscada:obj:2019102" version="1">
-		  <hive>HKEY_LOCAL_MACHINE</hive>
-		  <key operation="pattern match">^SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\.*$</key>
-		  <name>DisplayName</name>
-		</registry_object>
-		
-	</objects>
+    </definitions>
 
-	<states>		
-	    <registry_state xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" id="oval:datapk.ussc.ru-masterscada:ste:2019001" version="1">
-		  <value operation="pattern match">(?i)(.*MasterSCADA.*)$</value>
-		</registry_state>
+    <tests>        <registry_test xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" check="at least one" check_existence="at_least_one_exists" comment="Check if MasterSCADA installed" id="oval:datapk.ussc.ru-masterscada:tst:2019001" version="1">
+          <object object_ref="oval:datapk.ussc.ru-masterscada:obj:2019001" />
+        </registry_test>
+
+    </tests>
+
+    <objects>        <registry_object xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" comment="x64 and x32 registry paths" id="oval:datapk.ussc.ru-masterscada:obj:2019001" version="1">
+          <set set_operator="UNION">
+            <object_reference>oval:datapk.ussc.ru-masterscada:obj:2019101</object_reference>
+            <object_reference>oval:datapk.ussc.ru-masterscada:obj:2019102</object_reference>
+            <filter action="include">oval:datapk.ussc.ru-masterscada:ste:2019001</filter>
+          </set>
+        </registry_object>
+
+        <registry_object xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" comment="MasterSCADA in wow6432node uninstall" id="oval:datapk.ussc.ru-masterscada:obj:2019101" version="1">
+          <behaviors windows_view="64_bit" />
+          <hive>HKEY_LOCAL_MACHINE</hive>
+          <key operation="pattern match">^SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\.*$</key>
+          <name>DisplayName</name>
+        </registry_object>
+
+        <registry_object xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" comment="MasterSCADA in uninstall" id="oval:datapk.ussc.ru-masterscada:obj:2019102" version="1">
+          <hive>HKEY_LOCAL_MACHINE</hive>
+          <key operation="pattern match">^SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\.*$</key>
+          <name>DisplayName</name>
+        </registry_object>
+
+    </objects>
+
+    <states>        
+        <registry_state xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows" id="oval:datapk.ussc.ru-masterscada:ste:2019001" version="1">
+          <value operation="pattern match">(?i)(.*MasterSCADA.*)$</value>
+        </registry_state>
 
     </states>
 
@@ -130,7 +138,6 @@
 python local_repo_mgmt.py -d -f .\example1.xml
 
 Decomposing C:\Users\dyablochkin\Documents\dev\OVALRepo-local-tools\example1.xml ... Success
-
 ```
 
 Полученное сообщение означает, что конфиг был успешно разобран на составляющие. Его содержимое теперь находится в ScriptsEnvironment/repository. Можно заметить, что каждая составляющая (объект, состояние, переменная и т.п.) теперь является отдельным файлом с названиями, соответствующими их id. **Такие файлы, в случае совпадения id, будут заменяться без предупреждения.** Это означает, что если, например, три определения используют один и тот же объект, то он будет представлен в репозитории в единственном экземпляре. Если в нём содержится опечатка, её можно исправить в этом экземпляре либо собрать одно из определений, исправить там, а затем разложить определение обратно в репозиторий (файл с опечаткой заменится на новый).
@@ -312,11 +319,11 @@ INFO: Completed in 00:00:01!
 
 ```xml
 <oval_repository>
-		      <dates>
-		        <submitted date="2019-08-20T14:55:00.000+05:00">
-		          <contributor organization="USSC">Denis Yablochkin</contributor>
-		        </submitted>
-		      </dates>
+              <dates>
+                <submitted date="2019-08-20T14:55:00.000+05:00">
+                  <contributor organization="USSC">Denis Yablochkin</contributor>
+                </submitted>
+              </dates>
 </oval_repository>
 ```
 
@@ -335,5 +342,3 @@ INFO: Finding paths for 13 OVAL elements
 INFO: Generating OVAL definition file with 13 elements
 Invalid OVAL id: oval:datapk.us::::::::::::sc.ru-wincc:def:2018001
 ```
-
-
