@@ -1,8 +1,8 @@
-# Использование local_repo_mgmt.py
+# Использование lrm.py
 
 Инструменты сообщества, представленные в репозитории CISecurity OVALRepo, обладают полезными возможностями для управления большим количеством определений OVAL (особенно если эти определения используют одни и те же ресурсы - объекты, переменные). Однако, эти инструменты предназначены для подготовки определений и их составляющих к загрузке в репозиторий, поэтому осуществлять управление через ними напрямую невозможно. Например, невозможно сделать сборку одного репозитория несколько раз (собрать из репозитория все определения для WinCC, а потом сразу же все определения для MasterSCADA). 
 
-Для решения этих проблем используется обёртка, позволяющая не только разбирать и собирать определения неограниченное количество раз, но и расширяющая возможности стандартных скриптов.
+Для решения этих проблем используется обёртка Local repository management, позволяющая не только разбирать и собирать определения неограниченное количество раз, но и расширяющая возможности стандартных скриптов.
 
 ## Состав
 
@@ -22,19 +22,31 @@
 
 - lib_xml.py
 
-Поэтому она требует все те же библиотеки (смотри requirements.txt), что и оригинальный набор инструментов. Для Windows имеется скрипт bat для установки требуемых библиотек из PIP.
+Поэтому она требует все те же библиотеки (смотри requirements.txt), что и оригинальный набор инструментов. Для Windows имеется bat-скрипт для установки требуемых библиотек из PIP.
 
-Кроме того, в обёртке используется несколько дополнительных модулей (папка modules). Список модулей представлен ниже:
+Кроме того, в обёртке используется несколько модулей (папка modules, для каждого модуля существует команда). Список модулей представлен ниже:
 
-- definition_file_reader.py - модуль для вычитки поля title из определения, используется при выводе списка определений в репозитории;
+- decompose_definition и build_definition - собственно модули обёртки. Представляют из себя вызов соответствующих модулей из оригинальной библиотеки с предварительной обработкой - подстановкой аргументов командной строки, созданием git-окружения и т.д.;
 
-- RecursiveXMLSearcher.py - модуль для поиска xml-тегов в файле. Является классом с приватными рекурсивными методами (их использовать руками не надо) и публичными методами search_one и search_all. Оба модуля возвращают ссылки на нужные теги. Модуль используется в time_stomper.py;
+- clear_repository - модуль очистки репозитория. Удаляет временные папки от Python и git;
 
-- time_stomper.py - модуль для "подделки" тега oval_repository в требуемом файле. Может быть использован когда необходимо разложить в репозиторий файл, в котором нет тега oval_repository. Такой файл невозможно собрать обратно, поэтому сначала к нему следует дописать валидный тег oval_repository, а только затем разбирать на составляющие. Эта утилита делает это автоматически и быстро обрабатывает даже крупные файлы.
+- list_repository - модуль вывода списка файлов в репозитории. Для определений выводит поле `<title>`;
+
+- timestamp_definition - модуль вставки временной отметки в определения. Создаёт валидный блок `<oval_repository>` с временной отметкой, необходимый для работы с репозиторием;
+
+- validate_definition - модуль валидации. Проводит валидацию файла по заданному каталогу схем (см. каталог schemas).
+
+Список подмодулей:
+
+- read_title.py - модуль для вычитки поля title из определения, используется при выводе списка определений в репозитории;
+
+- RecursiveXMLSearcher.py - модуль для поиска xml-тегов в файле. Является классом с приватными рекурсивными методами (их использовать руками не надо) и публичными методами search_one и search_all. Оба модуля возвращают ссылки на нужные теги. Модуль используется в timestamp_definition.py;
+
+- Validator.py - модуль, используемый при валидации. Для папки схем создаёт общую схему, по которой и делает проверку.
 
 ## Принцип работы
 
-Папка ScriptsEnvironment содержит папку scripts с модулями. Управление этим модулям передаётся в зависимости от ключа (-d для oval_decomposition и -b для build_oval_definitions_file). При работе с ними в каталоге ScriptsEnvironment создаётся временный репозиторий git, необходимый для корректной работы. Разобранные файлы помещаются в каталоге repository.
+Папка ScriptsEnvironment содержит папку scripts с модулями. Управление этим модулям передаётся в зависимости от ключа (d для oval_decomposition и b для build_oval_definitions_file). При работе с ними в каталоге ScriptsEnvironment создаётся временный репозиторий git, необходимый для корректной работы. Разобранные файлы помещаются в каталоге repository. При каждой операции build репозиторий пересоздаётся, что позволяет сбор определений несколько раз подряд.
 
 ## Пример использования
 
@@ -130,31 +142,40 @@
  </oval_repository> 
 ```
 
-**Эти теги не проверяются интерпретаторами вроде OVALdi (это означает, что на этапе тестирования определений интерпретаторы в них ошибок не увидят), но НЕОБХОДИМЫ для корректного функционирования всех инструментов.**
+**Эти теги не проверяются интерпретаторами вроде OVALdi (это означает, что на этапе тестирования определений интерпретаторы в них ошибок не увидят), но НЕОБХОДИМЫ для корректного функционирования всех инструментов. Для автоматической вставки таких тегов в любой файл имеется опция t в обёртке.**
 
 Для разбора определения на составляющие требуется выполнить команду:
 
 ```batch
-python local_repo_mgmt.py -d -f .\example1.xml
+python lrm.py d --o "-f .\example1.xml"
 
-Decomposing C:\Users\dyablochkin\Documents\dev\OVALRepo-local-tools\example1.xml ... Success
+Decomposing example1.xml ... Success
 ```
 
-Полученное сообщение означает, что конфиг был успешно разобран на составляющие. Его содержимое теперь находится в ScriptsEnvironment/repository. Можно заметить, что каждая составляющая (объект, состояние, переменная и т.п.) теперь является отдельным файлом с названиями, соответствующими их id. **Такие файлы, в случае совпадения id, будут заменяться без предупреждения.** Это означает, что если, например, три определения используют один и тот же объект, то он будет представлен в репозитории в единственном экземпляре. Если в нём содержится опечатка, её можно исправить в этом экземпляре либо собрать одно из определений, исправить там, а затем разложить определение обратно в репозиторий (файл с опечаткой заменится на новый).
 
-Что произошло при вызове команды? Ключ -d означает, что управление передаётся в модуль oval_decomposition.py. Все остальные флаги уже передаются в этот модуль. Например, можно получить помощь этого модуля, если не указывать дополнительные ключи:
+Полученное сообщение означает, что конфиг был успешно разобран на составляющие. Его содержимое теперь находится в ScriptsEnvironment/repository. Можно заметить, что каждая составляющая (объект, состояние, переменная и т.п.) теперь является отдельным файлом с названиями, соответствующими их id. **Такие файлы, в случае совпадения id, будут заменяться без предупреждения.** (через флаг -v внутри поля опций можно наблюдать каждую замену). Это означает, что если, например, три определения используют один и тот же объект, то он будет представлен в репозитории в единственном экземпляре. Если в нём содержится опечатка, её можно исправить в этом экземпляре либо собрать одно из определений, исправить там, а затем разложить определение обратно в репозиторий (файл с опечаткой заменится на новый).
+
+Что произошло при вызове команды? Ключ d означает, что управление передаётся в модуль oval_decomposition.py. Поле опций --o "..." - это то поле, которое передаётся непосредственно в оригинальный модуль. Всего существует две операции, которые требуют такое поле: d (разборка) и b (сборка). Содержимое поля опций подставляется в аргументы командной строки и передаётся оригинальным модулям. В обоих случаях поле --o можно опустить, тогда будет вызван help из **оригинального файла**: 
 
 ```batch
-python .\local_repo_mgmt.py -d
+python.exe .\lrm.py d
+usage: [-h] -f FILE [-v]
 
-usage: local_repo_mgmt.py [-h] -f FILE [-v]
-local_repo_mgmt.py: error: the following arguments are required: -f/--file
+Separates an OVAL file into its component parts and saves them to the
+repository.
+
+optional arguments:
+  -h, --help            show this help message and exit
+
+options:
+  -f FILE, --file FILE  The name of the source file
+  -v, --verbose         Enable more verbose messages
 ```
 
 Вывод содержимого репозитория:
 
 ```batch
-python.exe .\local_repo_mgmt.py -l -a
+python.exe .\lrm.py l --m a
 definitions:
         \inventory\oval:datapk.ussc.ru-masterscada:def:2019001   MasterSCADA установлена
 objects:
@@ -171,7 +192,7 @@ Total: 6
 Название, выводимое рядом с определением  берётся напрямую из тега title в нём. Следует обратить внимание, что этот вывод обработан для удобства (например, чтобы скопировать id). Дело в том, что на самом деле файлы имеют несколько другие названия. Для отключения обработки вывода можно воспользоваться командой:
 
 ```batch
-python.exe .\local_repo_mgmt.py -l -a -f
+python.exe .\lrm.py l --m a --f f
 
 ScriptsEnvironment\repository\definitions\inventory\oval_datapk.ussc.ru-masterscada_def_2019001.xml
 ScriptsEnvironment\repository\objects\windows\registry_object\2019000\oval_datapk.ussc.ru-masterscada_obj_2019001.xml
@@ -184,11 +205,23 @@ Total: 6
 
 Можно заметить, что при разборе двоеточие заменяется на землю. Символ '_' в id запрещён и будет создавать проблемы при сборке (см. известные ошибки).
 
-Теперь нужно собрать определение обратно. Для этого используется ключ -b:
+Стоит также помнить, что указание команды l без дополнительных аргументов выводит только список определений в репозитории. Команда имеет ключи для любого типа файлов и несколько дополнительных режимов работы:
 
 ```batch
-python.exe .\local_repo_mgmt.py -b
-usage: local_repo_mgmt.py [-h] -o OUTFILE [-v] [-s] [-t TEMPDIR]
+--m {a,d,t,o,s,v}, --mode {a,d,t,o,s,v}
+                        Output mode: all, definitions, tests, objects, states
+                        or variables. Default: only definitions.
+--f {f,l,h}, --format {f,l,h}
+                        Format options: full paths, count files in every
+                        category, hide definitions name
+```
+
+
+Теперь нужно собрать определение обратно. Для этого используется ключ b:
+
+```batch
+python.exe .\lrm.py b
+usage: lrm.py [-h] -o OUTFILE [-v] [-s] [-t TEMPDIR]
                           [--definition_id [OVAL_ID [OVAL_ID ...]]]
                           [--title [PHRASE [PHRASE ...]]]
                           [--description [PHRASE [PHRASE ...]]]
@@ -203,8 +236,10 @@ usage: local_repo_mgmt.py [-h] -o OUTFILE [-v] [-s] [-t TEMPDIR]
                           [--max_schema_version [SCHEMA_VERSION]]
                           [--all_definitions] [--from [YYYYMMDD]]
                           [--to [YYYYMMDD]]
-local_repo_mgmt.py: error: the following arguments are required: -o/--outfile
+lrm.py: error: the following arguments are required: -o/--outfile
 ```
+
+**При возникновении проблем с этим модулем следует запустить команду очистки окружения (опция c).**
 
 Он имеет множество параметров. Самыми полезными для сборки являются параметры:
 
@@ -221,7 +256,7 @@ local_repo_mgmt.py: error: the following arguments are required: -o/--outfile
 Пример сборки:
 
 ```batch
-python.exe .\local_repo_mgmt.py -b --product masterscada --max_schema_version 5.10.1 -o out.xml
+python.exe .\lrm.py b --o '--product masterscada --max_schema_version 5.10.1 -o out.xml'
 
 INFO: Rebuilding oval_definitions index completed (1 definitions)
 INFO: Found 1 matching OVAL definitions
@@ -234,7 +269,7 @@ INFO: Writing OVAL definitions to out.xml
 INFO: Completed in 00:00:01
 ```
 
-Таким образом будет получен тот же файл example1.xml с небольшими отступлениями (явно укажет неймспейс oval-def в определении).
+Таким образом будет получен тот же файл example1.xml с небольшими отступлениями (явно указан неймспейс oval-def в определении).
 
 ## Дополнительные функции
 
@@ -243,27 +278,25 @@ INFO: Completed in 00:00:01
 Например, возможно выполнять **декомпозицию каталога**:
 
 ```batch
-python.exe .\local_repo_mgmt.py -d -f .\example\
-Decomposing C:\Users\dyablochkin\Documents\dev\OVALRepo-local-tools\example\example2.xml ... Success
-Decomposing C:\Users\dyablochkin\Documents\dev\OVALRepo-local-tools\example\example3.xml ... Success
+python.exe .\lrm.py d --o '-f .\example\'
+Decomposing example\example2.xml ... Success
+Decomposing example\example3.xml ... Success
 ```
 
 Декомпозиция выполняется в алфавитном порядке, как видно из примера. 
 
-Кроме того, возможен **перенос декомпозированных файлов в каталог .decomposed** для удобства автозаполнения (сам каталог перемещён не будет, только содержимое). Для этого используется ключ -dr:
+Кроме того, возможен **перенос декомпозированных файлов в каталог .decomposed** для удобства автозаполнения (сам каталог перемещён не будет, только содержимое). Для этого используется ключ --r в команде d:
 
 ```batch
-python.exe .\local_repo_mgmt.py -dr -f .\example\
+python.exe .\lrm.py d --r --o '-f .\example\'
 
-Decomposing C:\Users\dyablochkin\Documents\dev\OVALRepo-local-tools\example\example2.xml ... Success
-Decomposing C:\Users\dyablochkin\Documents\dev\OVALRepo-local-tools\example\example3.xml ... Success
+Decomposing example\example2.xml ... Success
+Decomposing example\example3.xml ... Success
 
 dir .\.decomposed\
 
 Name
-
 ----
-
 1568619391.282225 example2.xml
 
 1568619391.293443 example3.xml
@@ -274,14 +307,16 @@ Name
 Наконец, существует команда очистки окружения скриптов на случай, если что-то пошло не так:
 
 ```batch
-python.exe .\local_repo_mgmt.py -c
-[WinError 3] Системе не удается найти указанный путь: 'ScriptsEnvironment\\.git'
+python.exe .\lrm.py c
+[WinError 2] Не удается найти указанный файл: 'ScriptsEnvironment\\.git'
 [WinError 2] Не удается найти указанный файл: 'ScriptsEnvironment\\.init'
-removed __pycache__
-removed __index__
+Removed ScriptsEnvironment\scripts\__pycache__
+Removed ScriptsEnvironment\scripts\__index__
+Removed modules\__pycache__
+Removed modules\submodules\__pycache__
 ```
 
-Ошибки для несуществующих файлов - это нормально, т.к. при штатной работе временные файлы удаляются автоматически.
+Ошибки для несуществующих файлов - это нормально, т.к. при штатной работе некоторые временные файлы удаляются автоматически.
 
 ## Известные ошибки
 
@@ -319,20 +354,22 @@ INFO: Completed in 00:00:01!
 
 ```xml
 <oval_repository>
-              <dates>
-                <submitted date="2019-08-20T14:55:00.000+05:00">
-                  <contributor organization="USSC">Denis Yablochkin</contributor>
-                </submitted>
-              </dates>
+    <dates>
+      <submitted date="2019-08-20T14:55:00.000+05:00">
+        <contributor organization="USSC">Denis Yablochkin</contributor>
+      </submitted>
+    </dates>
 </oval_repository>
 ```
 
+Автоматически такой блок в определения можно вставить, использовав ключ t в основной программе.
+
 ### Invalid OVAL id
 
-Символ "_" запрещено использовать в ID. Это служебный символ, используемый для расположения файлов на диске (символ : запрещён в именах файлов):
+Символ "_" запрещено использовать в ID. Это служебный символ, используемый для расположения файлов на диске (на него заменяются : в id). В итоге выходит путаница:
 
 ```batch
-py.exe .\local_repo_mgmt.py -b --definition_id oval:datapk.us____________sc.ru-wincc:def:2018001 -o out.xml
+py.exe .\lrm.py b --o '--definition_id oval:datapk.us____________sc.ru-wincc:def:2018001 -o out.xml'
 INFO: Rebuilding oval_definitions index completed (17 definitions)
 INFO: Found 1 matching OVAL definitions
 INFO: Finding downstream OVAL ids for all definitions

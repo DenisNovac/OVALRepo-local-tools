@@ -18,7 +18,7 @@ def decompose_definition( args ):
         # call help from oval_decomposition if no path specified
         sys.argv.clear()
         sys.argv.append('')
-        sys.argv.append('')
+        sys.argv.append('-h')
         oval_decomposition.main()
 
     auto_remove_decomposed = vars(args)['r']

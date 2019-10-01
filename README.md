@@ -16,6 +16,10 @@ This tool adds features:
 
 - decompose whole folder of OVAL definitions;
 
-- list repository by type of file (definitions, tests, etc).
+- list repository by type of file (definitions, tests, etc);
+
+- add valid `<oval_repository>` tag to file;
+
+- validate definition with xsd-schemas.
 
 See ./docs/ for usage reference (Russian including) or help in utility.
