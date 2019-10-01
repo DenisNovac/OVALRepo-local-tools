@@ -41,6 +41,7 @@ def main():
     parser_list.add_argument('--f', '--format', choices='flh', help='Format options: full paths, count files in every category, hide definitions name')
     parser_list.set_defaults(func=list_repository.list_repository)
 
+
     ''' Parser for Build module'''
     parser_build = subparsers.add_parser('b', help='Build OVAL definitions from repository.')
     parser_build.add_argument('--o', '--options', default='-h', help='Options for build module. Use "" for options. Pass only \'b\' to see full help from original module.')
@@ -57,8 +58,9 @@ def main():
     ''' Parser for Validation module'''
     parser_validate = subparsers.add_parser('v', help='Validate OVAL definition with schema.')
     parser_validate.add_argument('xml', help='Path to OVAL definition')
-    parser_validate.add_argument('xsd', help='Path to schema FOLDER')
+    parser_validate.add_argument('xsd', help='Path to schema FOLDER. Default: version 5.10.1.')
     parser_validate.set_defaults(func=validate_definition.validate_definition)
+
 
     '''Parser for timestamp_definition module'''
     #parser = argparse.ArgumentParser(description='This tool will authomatically check the oval_repository field in all definitions. If there is no such field - the tool will add it. New file will be saved in *original-name*-formatted.xml.')
@@ -68,6 +70,7 @@ def main():
     parser_ts.add_argument('organization', help='Name of the contributor\'s organization')
     parser_ts.set_defaults(func=timestamp_definition.timestamp_definition)
 
+    '''Process the parsers and start the program'''
     args = main_parser.parse_args()
     args.func(args)
 

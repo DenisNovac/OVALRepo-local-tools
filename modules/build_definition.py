@@ -17,6 +17,13 @@ def build_definition ( args ):
         sys.argv.append(a)
   
     # creating fake environment for scripts
+    try:
+        shutil.rmtree(os.path.relpath('./ScriptsEnvironment/.git'))
+        os.remove(os.path.relpath('./ScriptsEnvironment/.init'))
+    except:
+        pass
+
+    
     open(os.path.relpath('./ScriptsEnvironment/.init'), 'w').close()
     repo = Repo.init(os.path.relpath('./ScriptsEnvironment'))
     index = repo.index

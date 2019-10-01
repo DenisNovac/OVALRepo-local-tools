@@ -1,7 +1,7 @@
 from lxml import etree
-import re
-import os
-
+import xml.etree.ElementTree as ET
+import re, os
+from modules.submodules.RecursiveXMLSearcher import RecursiveXMLSearcher
 class Validator:
     
     WRAPPER_NAME = '__generated_wrapper.xsd'
@@ -16,6 +16,12 @@ class Validator:
             print('Schemas from CISecurity: https://github.com/CISecurity/OVAL')
             return False
         
+        
+        print('Getting version of schema...')
+        version = self.check_version(xsd_path)
+        if version:
+            print('Version '+version+' found.')
+
         # getting one schema from importing needed in one file
         wrapper_path = self.__wrap(xml_path, xsd_path)
         if not wrapper_path:
@@ -53,6 +59,14 @@ class Validator:
                 print('Perhaps, given element is not defined in schema of your version or you misplaced some elements. The right order: definitions, tests, objects, states, variables.')
                 print('Check new version of schemas on CISecurity: https://github.com/CISecurity/OVAL')
 
+            elif re.search('not an element of the set', str(e)):
+                attr = re.search('attribute \'(\w*)',str(e)).group(1)
+                elem = re.search('The value \'(\w*)\' is not an element of the set',str(e)).group(1)
+                
+                print('There is no '+attr+' = '+elem +' in your schema.')
+                print('Perhaps, given element is not defined in schema of your version.')
+                print('Check new version of schemas on CISecurity: https://github.com/CISecurity/OVAL')
+
             else:
                 print('There is no additional info for this error.')
             print()
@@ -80,11 +94,23 @@ class Validator:
         print('Checking for imported namespaces in definition...')
         with open(xml_path, 'r') as file:
             for line in file:
-                split = re.split('xmlns="'+namespace+'#', line)
-                try:
-                    needed_schemas.append(split[1].split('"')[0])
-                except Exception:
-                    pass
+                # do not process line without namespace
+                if not re.search('xmlns',line):
+                    continue
+                
+                # one line can contain more than one namepsace
+                words = line.split(' ')
+                for word in words:
+                    # cut namespace name from line (excluding oval-namespaces)
+                    split = re.split('xmlns.*="'+namespace+'#', word)
+                    # if that was not oval namespace, process it
+                    if split:
+                        try:
+                            # cut last part (something like ">)
+                            ns_name = split[1].split('"')[0]
+                            needed_schemas.append(ns_name)    
+                        except Exception:
+                            pass
 
         needed_schemas = list(set(needed_schemas))
         print('Imported namespaces: '+str(needed_schemas))
@@ -147,3 +173,20 @@ class Validator:
         except Exception as e:
             print(str(e))
         return
+
+    
+    def check_version( self, xsd_path ):
+        path = xsd_path
+        if re.search('.*'+os.sep+os.sep+'$', path):
+            path = path+'oval-definitions-schema.xsd'
+        else:
+            path = path+os.sep+'oval-definitions-schema.xsd'
+        try:
+            rs = RecursiveXMLSearcher()
+            tree = ET.parse(path)
+            root = tree.getroot()
+            v = rs.search_one(root,'version')
+            return v.text
+        except Exception as e:
+            print('Unable to check version! Folder with schema may be corrupted. Error: '+str(e))
+            return None        
