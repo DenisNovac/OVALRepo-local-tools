@@ -92,7 +92,8 @@ class Validator:
         # checking namespaces used in OVAL xml config
         needed_schemas = [ ]
         print('Checking for imported namespaces in definition...')
-        with open(xml_path, 'r') as file:
+        # sometimes you have to change encoding here
+        with open(xml_path, 'r', encoding='utf-8') as file:
             for line in file:
                 # do not process line without namespace
                 if not re.search('xmlns',line):
