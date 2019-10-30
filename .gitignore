@@ -5,3 +5,5 @@ ScriptsEnvironment/repository
 /ScriptsEnvironment/scripts/__index__
 /modules/__pycache__
 /modules/submodules/__pycache__
+OVALRepo/
+.vscode/
