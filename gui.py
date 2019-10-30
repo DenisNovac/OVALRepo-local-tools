@@ -5,17 +5,17 @@ import modules.list_repository
 import modules.build_definition
 import re
 import time
+from threading import Thread
 
-
-class BuildDefinitionsFrame:
+class BuildFrameObject:
     build_frame = None
     list_frame_object = None
     operational_frame_object = None
 
     class OperationalFrameObject:
-        # parent frame
+        # parent object
         build_frame_object = None
-        # self
+        # self frame
         operational_frame = None
 
         # child frames
@@ -37,7 +37,7 @@ class BuildDefinitionsFrame:
             self.console_frame=tk.Frame(self.operational_frame)
             
         def initConsole(self):
-            self.console=tk.Text(self.console_frame, wrap=tk.WORD, state=tk.DISABLED)
+            self.console=tk.Text(self.console_frame, wrap=tk.WORD, state=tk.DISABLED, width=35)
             self.console_scrollbar=ttk.Scrollbar(master=self.console_frame, orient='vertical', command=self.console.yview)
             self.console.configure(yscrollcommand=self.console_scrollbar.set)
 
@@ -107,10 +107,10 @@ class BuildDefinitionsFrame:
 
 
     class ListFrameObject:
-        # parent frame
+        # parent object
         build_frame_object = None
 
-        # self
+        # self frame
         list_frame = None
 
         # widgets
@@ -195,7 +195,7 @@ def main():
     root = tk.Tk()
     root.geometry('1280x480')
     root.title('OVAL Repository Management')
-    build_frame = BuildDefinitionsFrame(root)
+    build_frame = BuildFrameObject(root)
     build_frame.initListFrame()
     build_frame.initOperationalFrame()
     build_frame.packBuildFrame()
