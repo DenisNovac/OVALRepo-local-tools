@@ -16,12 +16,12 @@ def list_repository( args ):
         's': repository_path+os.sep+'states',
         'v': repository_path+os.sep+'variables'
     }
-    mode = vars(args)['m']
+    mode = vars(args)['mode']
     rootdir = modes[mode]
 
-    isFull = True if vars(args)['f']=='f' else False
-    isLocalTotal = True if vars(args)['f']=='l' else False
-    isHidingDefinitions = True if vars(args)['f']=='h' else False
+    isFull = True if vars(args)['format']=='f' else False
+    isLocalTotal = True if vars(args)['format']=='l' else False
+    isHidingDefinitions = True if vars(args)['format']=='h' else False
 
     # Printing repository content
     repo = None

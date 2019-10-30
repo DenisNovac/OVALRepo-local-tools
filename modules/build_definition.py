@@ -13,7 +13,7 @@ def build_definition ( args ):
         except IndexError:
             pass
     
-    for a in vars(args)['o'].split(' '):
+    for a in vars(args)['options'].split(' '):
         sys.argv.append(a)
   
     # creating fake environment for scripts

@@ -10,9 +10,9 @@ def decompose_definition( args ):
     input_path=''
     # take path from arguments: -f <path> and check for -v flag
     try:
-        if re.search('(^-v)|(-v$)', vars(args)['o'].strip()):
+        if re.search('(^-v)|(-v$)', vars(args)['options'].strip()):
             verbose_output=True
-        input_path = vars(args)['o'].split('-f ')[1]
+        input_path = vars(args)['options'].split('-f ')[1]
         input_path = input_path.split(' ')[0]
     except Exception:
         # call help from oval_decomposition if no path specified
@@ -21,7 +21,7 @@ def decompose_definition( args ):
         sys.argv.append('-h')
         oval_decomposition.main()
 
-    auto_remove_decomposed = vars(args)['r']
+    auto_remove_decomposed = vars(args)['remove_decomposed']
 
     configs = [ ]    
     if os.path.isdir(input_path):

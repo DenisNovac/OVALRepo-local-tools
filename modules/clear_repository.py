@@ -12,7 +12,7 @@ def clear_repository( args ):
         './modules/submodules/__pycache__',
     ]
 
-    if vars(args)['d']:
+    if vars(args)['decomposed']:
         clear_path.append('./.decomposed')
 
     # clearing the pathes
