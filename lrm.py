@@ -26,32 +26,33 @@ import modules.timestamp_definition as timestamp_definition
 def main():
     """Main parser with subparsers"""
     main_parser = argparse.ArgumentParser(description='Local OVAL Repository Managment tool.')
+    main_parser.add_argument('-e', '--environment', help='Default Script Environment (folder with scripts and repository folder).')
     subparsers = main_parser.add_subparsers(title='Main options', help ='Choose one of this options. Help available for each one.')
 
 
     """Parser for Clear module"""
     parser_clear = subparsers.add_parser('c', help='Clear script environment. Use it if some troubles with building occurs.')
-    parser_clear.add_argument('--d', '--decomposed', action='store_true' ,help='Also clear .decomposed folder')
+    parser_clear.add_argument('-d', '--decomposed', action='store_true' ,help='Also clear .decomposed folder')
     parser_clear.set_defaults(func=clear_repository.clear_repository)
 
 
     """ Parser for List module"""
     parser_list = subparsers.add_parser('l', help='List entries in repository.')
-    parser_list.add_argument('--m', '--mode', choices='adtosv', default='d', help='Output mode: all, definitions, tests, objects, states or variables. Default: only definitions.')
-    parser_list.add_argument('--f', '--format', choices='flh', help='Format options: full paths, count files in every category, hide definitions name')
+    parser_list.add_argument('-m', '--mode', choices='adtosv', default='d', help='Output mode: all, definitions, tests, objects, states or variables. Default: only definitions.')
+    parser_list.add_argument('-f', '--format', choices='flh', help='Format options: full paths, count files in every category, hide definitions name')
     parser_list.set_defaults(func=list_repository.list_repository)
 
 
     """ Parser for Build module"""
     parser_build = subparsers.add_parser('b', help='Build OVAL definitions from repository.')
-    parser_build.add_argument('--o', '--options', default='-h', help='Options for build module. Use "" for options. Pass only \'b\' to see full help from original module.')
+    parser_build.add_argument('-o', '--options', default='-h', help='Options for build module. Use "" for options. Pass only \'b\' to see full help from original module.')
     parser_build.set_defaults(func=build_definition.build_definition)
 
 
     """ Parser for Decomposition module"""
     parser_decompose = subparsers.add_parser('d', help='Decompose OVAL definitions to repository. It will replace entries with equal IDs. Use LIST to check IDs. You may specify path to directory and all xmls inside will be decomposed.')
-    parser_decompose.add_argument('--r', '--replaces_decomposed', action='store_true', help='Replaces decomposed files to .decomposed folder.')
-    parser_decompose.add_argument('--o', '--options', help='Options for build module. Use "" for options. Pass only \'b\' to see full help from original module.')
+    parser_decompose.add_argument('-r', '--remove_decomposed', action='store_true', help='Replaces decomposed files to .decomposed folder.')
+    parser_decompose.add_argument('-o', '--options', help='Options for build module. Use "" for options. Pass only \'b\' to see full help from original module.')
     parser_decompose.set_defaults(func=decompose_definition.decompose_definition)
 
 
