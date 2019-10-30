@@ -28,6 +28,10 @@ class BuildFrameObject:
         build_button=None
         name_label=None
 
+        # processing thread
+        thread = None
+
+
         def __init__(self, build_frame_object, build_frame):
             self.build_frame_object=build_frame_object
             self.operational_frame=tk.Frame(build_frame) 
@@ -37,7 +41,7 @@ class BuildFrameObject:
             self.console_frame=tk.Frame(self.operational_frame)
             
         def initConsole(self):
-            self.console=tk.Text(self.console_frame, wrap=tk.WORD, state=tk.DISABLED, width=35)
+            self.console=tk.Text(self.console_frame, wrap=tk.WORD, width=45, font=("Courier", 9))
             self.console_scrollbar=ttk.Scrollbar(master=self.console_frame, orient='vertical', command=self.console.yview)
             self.console.configure(yscrollcommand=self.console_scrollbar.set)
 
@@ -48,61 +52,86 @@ class BuildFrameObject:
 
         def initControls(self):
             self.name_label = tk.Label(self.control_frame, text='   OVAL Repository Management   ')
-            self.build_button = tk.Button(self.control_frame, text='Build chosen definitions')
+            self.build_button = tk.Button(self.control_frame, text='Build OVAL definitions')
             self.build_button.bind('<1>',self.onBuildButtonClick)
 
+
         def onBuildButtonClick(self, args):
-            button = self.build_button
-            text = self.console
+            """Event listener for Build button
 
-            # tree from another frame
-            tree = self.build_frame_object.list_frame_object.tree
-            #print(tree)
+            This listener only starts new thread so GUI will not be freezed.
+            The thread won't be started if button is disabled, which means
+            that building is working now.
+            """
 
-            if button['state']==tk.DISABLED:
+            if self.build_button['state']=='disabled':
                 return
+            Thread(target=self.buildButtonWorker).start()
 
-            button['state']=tk.DISABLED
+        def buildButtonWorker(self):
+            """Actual button action
 
-            text['state']=tk.NORMAL
-            text.delete(1.0,tk.END)
-            text.insert(1.0,'Building definitions:\n')
-            
+            This method will disable button until end and start building
+            chosen OVAL definitions.
+            """
+            # disable button to prevent lot of threading
+            self.build_button.configure(state='disabled')
+            self.build_button.update()
+
+            text = self.console
+            tree = self.build_frame_object.list_frame_object.tree
             items = tree.selection()
+
+            text.delete(1.0,tk.END)
+            
+            names = [ ]
             build_query=''
             for i in items:
                 it = tree.item(i)
                 if it['text']=='definitions':
                     try:
-                        name = it['values'][0]
+                        names.append(it['values'][0])
                         query = it['values'][1]
                         def_id = query.split('\\')[-1]
                         build_query+=def_id+', '
-                        text.insert(2.0, name+'\n')
                     except IndexError as e:
-                        print(e)
+                        print('IndexError: '+str(e))
+                        pass
+
             if build_query:
+                text.insert(1.0,'Building definitions:\n')
+                if len(names)<50:
+                    for n in names:
+                        text.insert(2.0, '*'+n+'\n')
+                else:
+                    length = str(len(names))
+                    text.insert(2.0, f'Too much definitions to write names. Building {length} definitions.')
+
                 # cut off the last comma
                 build_query = re.search('(.*)(, $)', build_query).group(1)
-                # and go to build
 
                 class BuildArguments:
                     options = None
                     def __init__(self, o):
                         self.options=o
-
                 query = f'--definition_id {build_query} -o out.xml'
-                print(query)
                 args = BuildArguments(o=query)
 
-                thread = Thread(target=modules.build_definition.build_definition, args=(args, ))
-                thread.start()
+                modules.build_definition.build_definition(args)
 
-                text.insert(tk.END, 'Building done. File out.xml')
-                text.configure(state=tk.DISABLED)
+                text.insert(tk.END, '\n\nBuilding done. File out.xml')
 
-            button['state']=tk.NORMAL
-            text['state']=tk.DISABLED
+            else:
+                text.insert(tk.END,'No definitions choosed! Nothing to build.\n')
+                
+            self.build_button.configure(state='active')
+            self.build_button.update()
+
+
+
+            
+
+
 
 
 
@@ -133,22 +162,22 @@ class BuildFrameObject:
             self.tree.heading('#1', text = 'Title', anchor=tk.W)
             self.tree.heading('#2', text = 'Path to file', anchor=tk.W)
 
-            self.tree.column('#0', minwidth=85)
-            self.tree.column('#1', minwidth=2)
-            self.tree.column('#2', minwidth=85)
+            self.tree.column('#0', minwidth=3, width=10)
+            self.tree.column('#1', minwidth=3, width=80)
+            self.tree.column('#2', minwidth=3, width=10)
 
             self.tree.bind('<1>', self.onTreeClick)
 
         def getRepoContent(self):
-            repo = modules.list_repository.get_repository_dir(os.path.relpath('./ScriptsEnvironment/repository/'))
+            repo = modules.list_repository.get_repository_dir(os.path.relpath('./ScriptsEnvironment/repository/definitions'))
             for oval_type in repo:
                 ent_folder = self.tree.insert('',tk.END, text=oval_type, values=())
                 if oval_type=='definitions':
                     for title in repo[oval_type]:
                         self.tree.insert(ent_folder,tk.END, text=oval_type, values=(title, repo[oval_type][title]))
-                else: 
-                    for entity in repo[oval_type]:
-                        self.tree.insert(ent_folder,tk.END, text=oval_type, values=(entity.replace('\\','\\\\')))
+                #else: 
+                #    for entity in repo[oval_type]:
+                #        self.tree.insert(ent_folder,tk.END, text=oval_type, values=(entity.replace('\\','\\\\')))
         
         def onTreeClick(self, args):
             item = self.tree.selection()[0]
