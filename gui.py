@@ -99,7 +99,7 @@ class BuildFrameObject:
                         pass
 
             if build_query:
-                text.insert(1.0,'Building definitions:\n')
+                text.insert(1.0,'Building definitions (schema version 5.11.1):\n')
                 if len(names)<50:
                     for n in names:
                         text.insert(2.0, '*'+n+'\n')
@@ -114,12 +114,12 @@ class BuildFrameObject:
                     options = None
                     def __init__(self, o):
                         self.options=o
-                query = f'--definition_id {build_query} -o out.xml'
+                query = f'--definition_id {build_query} --max_schema_version 5.11.1 -o out.xml'
                 args = BuildArguments(o=query)
 
                 modules.build_definition.build_definition(args)
 
-                text.insert(tk.END, '\n\nBuilding done. File out.xml')
+                text.insert(tk.END, '\n\nBuilding done. File: out.xml')
 
             else:
                 text.insert(tk.END,'No definitions choosed! Nothing to build.\n')
@@ -171,10 +171,12 @@ class BuildFrameObject:
         def getRepoContent(self):
             repo = modules.list_repository.get_repository_dir(os.path.relpath('./ScriptsEnvironment/repository/definitions'))
             for oval_type in repo:
-                ent_folder = self.tree.insert('',tk.END, text=oval_type, values=())
+                length =str(len(repo[oval_type]))
+                header = oval_type+' ['+length+']'
+                ent_folder = self.tree.insert('', tk.END, text=header, values=())
                 if oval_type=='definitions':
-                    for title in repo[oval_type]:
-                        self.tree.insert(ent_folder,tk.END, text=oval_type, values=(title, repo[oval_type][title]))
+                    for id in repo[oval_type]:
+                        self.tree.insert(ent_folder, tk.END, text=oval_type, values=(repo[oval_type][id], id))
                 #else: 
                 #    for entity in repo[oval_type]:
                 #        self.tree.insert(ent_folder,tk.END, text=oval_type, values=(entity.replace('\\','\\\\')))
