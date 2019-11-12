@@ -1,3 +1,5 @@
+ScripstEnvironmenta/
+ScripstEnvironmentl/
 ScriptsEnvironment/repository
 /ScriptsEnvironment/.git
 /ScriptsEnvironment/.init
@@ -7,3 +9,4 @@ ScriptsEnvironment/repository
 /modules/submodules/__pycache__
 OVALRepo/
 .vscode/
+.idea/

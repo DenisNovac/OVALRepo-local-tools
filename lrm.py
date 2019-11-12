@@ -46,7 +46,7 @@ def main():
     """ Parser for Build module"""
     parser_build = subparsers.add_parser('b', help='Build OVAL definitions from repository.')
     parser_build.add_argument('-o', '--options', default='-h', help='Options for build module. Use "" for options. Pass only \'b\' to see full help from original module.')
-    parser_build.set_defaults(func=build_definition.build_definition)
+    parser_build.set_defaults(func=build_definition.build_definition_cli)
 
 
     """ Parser for Decomposition module"""

@@ -2,11 +2,16 @@ import re
 import xml.etree.ElementTree as ET
 from modules.submodules.RecursiveXMLSearcher import RecursiveXMLSearcher
 
-def read_title( path, add_reference=False ):
+def read_title(path, add_reference=False):
     title = None
     reference = None
- 
-    tree = ET.parse(path)
+    try:
+        tree = ET.parse(path)
+    except ET.ParseError as e:
+        print('Wrong XML format in file '+path+':')
+        print(e)
+        exit(-1)
+
     root = tree.getroot()
 
     rs = RecursiveXMLSearcher()
