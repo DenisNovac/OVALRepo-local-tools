@@ -38,24 +38,27 @@ def list_repository( args ):
             length+=len(repo[oval_type])
             print(oval_type+':')
             if oval_type=='definitions':
-                for title in repo[oval_type]:
-                    show_title=title if not isHidingDefinitions else ''
-                    print('\t'+repo[oval_type][title]+'\t'+show_title)
+                for id in repo[oval_type]:
+                    show_title = repo[oval_type][id] if not isHidingDefinitions else ''
+                    print('\t'+id+'\t'+show_title)
             else: 
                 for entity in repo[oval_type]:
                     print('\t'+entity)
             
             if isLocalTotal:
                 print('\tType total: '+str(len(repo[oval_type])))
-            
-    
+
     print('Total: '+str(length))
     
 
 
 
 def get_repository_dir( rootdir ):
-    """Function for smart dictionary creating"""
+    """
+    Function for smart dictionary creating. Will create
+    dictionaries
+
+    """
 
     repository_dict = { }
 
@@ -72,18 +75,13 @@ def get_repository_dir( rootdir ):
             short_path=short_path.replace(flag+os.sep,'')
 
             if not lastflag==flag:
+                # this called once for each category of OVAL files
                 lastflag=flag
                 # only definitions has the title which can be used as key
                 if flag=='definitions':
                     repository_dict[flag]={ }
                 else:
                     repository_dict[flag]=[ ]
-                
-            title = None
-            if flag=='definitions':
-                title_get = read_title.read_title(path, False)
-                if title_get:
-                    title=title_get
 
             # make name of the entity useful for copying/finding in
             # OVAL xml sources
@@ -91,8 +89,18 @@ def get_repository_dir( rootdir ):
             spl[len(spl)-1] = spl[len(spl)-1].replace('_',':')
             short_path = os.sep.join(spl).replace('.xml','')
 
-            if title:
-                repository_dict[flag][title]=short_path
+            if flag=='definitions':
+                id = short_path.split(os.sep)[-1]
+                title = read_title.read_title(path)
+                # not every definition may have the title, so we use ID instead
+                if title:
+                    """
+                    There is a lot of equal titles even in OVAL Repo from CISecurity,
+                    so we can not use title as a key by itself.
+                    """
+                    repository_dict[flag][short_path]=title
+                else:
+                    repository_dict[flag][short_path.split(os.sep)[-1]]=id
             else:
                 repository_dict[flag].append(short_path)
     return repository_dict
@@ -100,7 +108,9 @@ def get_repository_dir( rootdir ):
 
 
 def get_simple_repository_content( rootdir ):
-    """This function will return an simple array of paths"""
+    """
+    This function will return an simple array of paths
+    """
     repository_array = [ ]
     for subdir, dirs, files in os.walk(rootdir):
         for file in files:

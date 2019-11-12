@@ -1,14 +1,17 @@
 import os, shutil, sys, random
 from git import Repo
-import git.exc
+from git.exc import InvalidGitRepositoryError
+
 sys.path.insert(1, os.path.relpath('./ScriptsEnvironment/scripts'))
 import ScriptsEnvironment.scripts.build_oval_definitions_file as build_oval_definitions_file
 
 def build_definition_cli(args):
-    # removing 1, 2 and 3 arguments of command line because
-    # build_oval_definitions_file will use them with own parser
-    # in GUI we won't need this since we'll operate with 
-    # build_definition directly
+    """
+    Removing 1, 2 and 3 arguments of command line because
+    build_oval_definitions_file will process command line arguments
+    with own parser. In GUI we won't need this since we'll operate with
+    build_definition directly and do not use arguments.
+    """
 
     if len(sys.argv)>2:
         try:
@@ -21,35 +24,38 @@ def build_definition_cli(args):
 
 
 def build_definition(args):
-    
+    """
+    This function will create fake GIT environment. There is no visible speed
+    growth when indexing OVAL repository with git all the time. It is faster
+    to just commit one little file and make build.
+    """
     for a in vars(args)['options'].split(' '):
         sys.argv.append(a)
   
     # creating fake environment for scripts
     try:
-        #shutil.rmtree(os.path.relpath('./ScriptsEnvironment/.git'))
+        shutil.rmtree(os.path.relpath('./ScriptsEnvironment/.git'))
         os.remove(os.path.relpath('./ScriptsEnvironment/.init'))
     except:
         pass
 
     with open(os.path.relpath('./ScriptsEnvironment/.init'), 'w') as file:
-        for i in range(0,3):
-            r=int(random.random()*100)
-            file.write(str(i))
+        file.write('init')
+        
     try:
         repo = Repo(os.path.relpath('./ScriptsEnvironment'))
-    except git.exc.InvalidGitRepositoryError:
+    except InvalidGitRepositoryError:
         repo = Repo.init(os.path.relpath('./ScriptsEnvironment'))
     
     index = repo.index
-    index.add( [ '*' ] )
+    index.add( [ '.init' ] )
     index.commit("env")
 
     build_oval_definitions_file.main()
 
     # removing fake environment for next use
     try:
-        #shutil.rmtree(os.path.relpath('./ScriptsEnvironment/.git'))
+        shutil.rmtree(os.path.relpath('./ScriptsEnvironment/.git'))
         os.remove(os.path.relpath('./ScriptsEnvironment/.init'))
     except:
         pass
