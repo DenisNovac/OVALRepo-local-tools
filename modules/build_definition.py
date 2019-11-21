@@ -29,6 +29,7 @@ def build_definition(args):
     growth when indexing OVAL repository with git all the time. It is faster
     to just commit one little file and make build.
     """
+
     for a in vars(args)['options'].split(' '):
         sys.argv.append(a)
   

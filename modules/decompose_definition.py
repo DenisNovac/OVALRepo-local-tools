@@ -1,27 +1,27 @@
-import os, sys, shutil, re
+import os, sys, shutil, re, time
 from datetime import datetime
 sys.path.insert(1, os.path.relpath('./ScriptsEnvironment/scripts'))
 import ScriptsEnvironment.scripts.oval_decomposition as oval_decomposition
 
-def decompose_definition( args ):
-    # removing 1, 2 and 3 arguments of command line because
+def decompose_definition(args):
+    # removing 1 and 2 arguments of command line because
     # oval_decomposition will use them with own parser
-    verbose_output = False
-    input_path=''
-    # take path from arguments: -f <path> and check for -v flag
+    sys.argv.pop(0)
+    sys.argv.pop(0)
+
+    # check if there is auto_remove_decomposed flag
+    #if ''
+
+    # check if input path is a folder
+    input_path = None
     try:
-        if re.search('(^-v)|(-v$)', vars(args)['options'].strip()):
-            verbose_output=True
-        input_path = vars(args)['options'].split('-f ')[1]
-        input_path = input_path.split(' ')[0]
-    except Exception:
-        # call help from oval_decomposition if no path specified
+        input_path = re.search(r'-f (?P<input_path>(\S*))', ' '.join(args))['input_path']
+    except TypeError as e:
         sys.argv.clear()
-        sys.argv.append('')
         sys.argv.append('-h')
         oval_decomposition.main()
 
-    auto_remove_decomposed = vars(args)['remove_decomposed']
+    #auto_remove_decomposed = vars(args)['remove_decomposed']
 
     configs = [ ]    
     if os.path.isdir(input_path):
@@ -39,26 +39,33 @@ def decompose_definition( args ):
         
         # new console arguments for every config because
         # oval_decomposition uses it's own argument parser
+        is_verbose = False
+        if '-v' in sys.argv:
+            is_verbose = True
         sys.argv.clear()
         sys.argv.append('')
         sys.argv.append('-f')
         sys.argv.append(config)
-        if verbose_output:
+        if is_verbose:
             sys.argv.append('-v')
+            # This is because you want to see when it switches to another file on decomposing
+            time.sleep(1)
         oval_decomposition.main()
 
+
         # replaces decomposed configs in .decomposed folder
-        if auto_remove_decomposed:
-            config_name=config.split(os.sep)[len(config.split(os.sep))-1]
-            path = os.path.abspath(sys.argv[2])
-            try:
-                os.mkdir(os.path.abspath('./.decomposed'))
-                os.system("attrib +h " + os.path.abspath('./.decomposed'))
-            except:
-                pass
-            time=datetime.now()
-            ts=str(datetime.timestamp(time))
-            shutil.move(path,os.path.abspath('./.decomposed/'+ts+' '+config_name))
+        #if auto_remove_decomposed:
+        #    config_name=config.split(os.sep)[len(config.split(os.sep))-1]
+        #    path = os.path.abspath(sys.argv[2])
+        #    try:
+        #        os.mkdir(os.path.abspath('./.decomposed'))
+        #        os.system("attrib +h " + os.path.abspath('./.decomposed'))
+        #    except:
+        #        pass
+        #    time=datetime.now()
+        #    ts=str(datetime.timestamp(time))
+        #    shutil.move(path,os.path.abspath('./.decomposed/'+ts+' '+config_name))
 
         sys.stdout.write(" Success\n")
         sys.stdout.flush()
+
