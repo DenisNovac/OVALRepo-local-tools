@@ -1,13 +1,13 @@
-import re
 import argparse
+import sys
 
+import modules.build_definition as build_definition
+import modules.clear_repository as clear_repository
+import modules.decompose_definition as decompose_definition
 # custom modules
 import modules.list_repository as list_repository
-import modules.clear_repository as clear_repository
-import modules.build_definition as build_definition
-import modules.decompose_definition as decompose_definition
-import modules.validate_definition as validate_definition
 import modules.timestamp_definition as timestamp_definition
+import modules.validate_definition as validate_definition
 
 
 class ArgumentsParser:
@@ -18,18 +18,18 @@ class ArgumentsParser:
     loosing command-line autocomplete.
     """
 
-
-
     @staticmethod
-    def parse_arguments(args):
+    def parse_arguments():
 
         # Second argument is always a function name, so it will decide if i use argparse or custom parser.
         # There is no need to use argparse for wrapped modules - they have their own argparse.
         wrapped_modules = ['b', 'd']
         try:
-            if args[1] in wrapped_modules:
-                ArgumentsParser.__call_wrapped_modules(args)
+            if sys.argv[1] in wrapped_modules:
+                # call wrapped modules directly
+                ArgumentsParser.__call_wrapped_modules()
             else:
+                # call own parsers first
                 ArgumentsParser.__call_argparse()
         except IndexError as e:
             print(e)
@@ -37,17 +37,16 @@ class ArgumentsParser:
 
         pass
 
-
     @staticmethod
-    def __call_wrapped_modules(args):
+    def __call_wrapped_modules():
         """
         This method will be called if user DOES want to use some OVAL Repo modules. These modules already have
         argparse library inside, so we only want to run modules.
         """
-        if args[1] == 'b':
-            build_definition.build_definition_cli(args)
-        elif args[1] == 'd':
-            decompose_definition.decompose_definition(args)
+        if sys.argv[1] == 'b':
+            build_definition.build_definition_cli()
+        elif sys.argv[1] == 'd':
+            decompose_definition.decompose_definition()
         pass
 
     @staticmethod
@@ -58,10 +57,9 @@ class ArgumentsParser:
 
         """
 
-
         """Main parser with subparsers"""
         main_parser = argparse.ArgumentParser(description='Local OVAL Repository Managment tool.')
-        #main_parser.add_argument('-e', '--environment',
+        # main_parser.add_argument('-e', '--environment',
         #                         help='Default Script Environment (folder with scripts and repository folder).')
         subparsers = main_parser.add_subparsers(title='Main options',
                                                 help='Choose one of this options. Help available for each one.')
@@ -121,24 +119,6 @@ class ArgumentsParser:
         parser_ts.set_defaults(func=timestamp_definition.timestamp_definition)
         args = main_parser.parse_args()
         try:
-           args.func(args)
+            args.func(args)
         except AttributeError:
-           main_parser.print_help()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            main_parser.print_help()
