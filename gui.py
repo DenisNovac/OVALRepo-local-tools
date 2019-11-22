@@ -1,10 +1,12 @@
 import os
+import re
+import sys
+
 import tkinter as tk
 import tkinter.ttk as ttk
 import modules.list_repository
 import modules.build_definition
-import re
-import time
+
 from threading import Thread
 
 class BuildFrameObject:
@@ -109,15 +111,9 @@ class BuildFrameObject:
 
                 # cut off the last comma
                 build_query = re.search('(.*)(, $)', build_query).group(1)
-
-                class BuildArguments:
-                    options = None
-                    def __init__(self, o):
-                        self.options=o
-                query = f'--definition_id {build_query} --max_schema_version 5.11.1 -o out.xml'
-                args = BuildArguments(o=query)
-
-                modules.build_definition.build_definition(args)
+                query = f'b --definition_id {build_query} --max_schema_version 5.11.1 -o out.xml'
+                sys.argv = query.split(' ')
+                modules.build_definition.build_definition()
 
                 text.insert(tk.END, '\n\nBuilding done. File: out.xml')
 
