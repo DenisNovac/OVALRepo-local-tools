@@ -1,5 +1,6 @@
 import os
 import re
+import logging
 import xml.etree.ElementTree as ET
 
 from lxml import etree
@@ -12,8 +13,18 @@ class Validator:
     WRAPPER_PATH = ''
     DEFAULT_NAMESPACE = 'http://oval.mitre.org/XMLSchema/oval-definitions-5'
     DEFAULT_ENCODING = 'UTF-8'
+    ERR_MESSAGE = ""
 
-    def validate(self, xml_path, xsd_path) -> bool:
+    def __init__(self):
+        """
+        Initialize loggers
+        """
+        self.e_log = logging.getLogger()
+        self.e_log.setLevel(logging.ERROR)
+        self.i_log = logging.getLogger()
+        self.i_log.setLevel(logging.INFO)
+
+    def validate(self, xml_path, xsd_path) -> tuple:
         """
         Main validation method. It will try to validate OVAL definition xml file through schema files in specified
         folder. Used schemas (such as specific for Windows) will be concatenated to one "Wrapper" file wich will be
@@ -21,22 +32,24 @@ class Validator:
 
         :param xml_path: OVAL definition file for validation
         :param xsd_path: Folder with XML schemas for validation
-        :return: bool
+        :return: tuple CODE, RESULT (if code is -1 the result is error message)
         """
         if not os.path.isdir(xsd_path):
-            print('ERROR:')
-            print('xsd_path must refer to FOLDER with OVAL schemas')
-            print('Schemas from CISecurity: https://github.com/CISecurity/OVAL')
-            return False
+            self.ERR_MESSAGE = f'xsd_path must refer to FOLDER with OVAL schemas but {xsd_path} provided.'
+            self.e_log.error(self.ERR_MESSAGE)
+            return -1, self.ERR_MESSAGE
 
         self.check_schema_version(xsd_path)
         self.check_definition_version(xml_path)
 
         # getting one schema from importing needed in one file
         wrapper_path = self.wrap_schema(xml_path, xsd_path)
-        if not wrapper_path:
-            return False
+        if not wrapper_path[0] == 0:
+            self.ERR_MESSAGE = 'Unable to get wrapper for schema.'
+            return -1, self.ERR_MESSAGE
+
         # this variable is needed to delete wrapper afterwards
+        wrapper_path = wrapper_path[1]
         self.WRAPPER_PATH = wrapper_path
 
         # parsing xmls
@@ -45,75 +58,88 @@ class Validator:
             xsd = etree.XMLSchema(xsd_parsed)
             xml_doc = etree.parse(xml_path)
         except OSError as e:
-            if re.search('Error reading file', str(e)):
-                print('Error reading file. File may not exist.')
-            else:
-                print(str(e))
-            return False
+            self.ERR_MESSAGE = f'Error reading file {e}'
+            self.e_log.error(self.ERR_MESSAGE)
+            return -1, self.ERR_MESSAGE
 
         # validation and error processing
         try:
-            print('Validation starting...')
+            self.i_log.info('Validation starting...')
             xsd.assertValid(xml_doc)
         except etree.DocumentInvalid as e:
-            print('\nVALIDATION ERROR')
-            print(str(e) + '\n')
-            print('Additional info:')
+            self.ERR_MESSAGE = f'Validation error: {e}'
+
             if re.search('No match found for key-sequence', str(e)):
                 element = re.split('No match found for key-sequence', str(e))[1]
                 element = re.split('of keyref', element)[0]
                 element = element.replace('[\'', '').replace('\']', '')
-                print(f'''
-                Perhaps, element refers to ID that is not exists.
-                Check existence of element with ID  {element.strip()}''')
+
+                self.ERR_MESSAGE += f'\n Perhaps, element refers to ID that is not exists. Check existence of element '\
+                                    f'with ID  {element.strip()} '
 
             elif re.search('This element is not expected', str(e)):
-                print('''
-                Perhaps, given element is not defined in schema of your version or you misplaced some elements. 
-                The right order: definitions, tests, objects, states, variables.
-                Check new version of schemas on CISecurity: https://github.com/CISecurity/OVAL''')
+
+                self.ERR_MESSAGE += f'\nPerhaps, given element is not defined in schema of your version or you ' \
+                                    f'misplaced some elements. The right order: definitions, tests, objects, states, '\
+                                    f'variables. Check new version of schemas on CISecurity: ' \
+                                    f'https://github.com/CISecurity/OVAL '
 
             elif re.search('not an element of the set', str(e)):
                 attr = re.search(r'attribute \'(\w*)', str(e)).group(1)
                 elem = re.search(r'The value \'(\w*)\' is not an element of the set', str(e)).group(1)
-                print(f'''
-                There is no {attr} = {elem}  in your schema.
-                Perhaps, given element is not defined in schema of your version.
-                Check new version of schemas on CISecurity: https://github.com/CISecurity/OVAL''')
+                self.ERR_MESSAGE += f'\nThere is no {attr} = {elem}  in your schema. Perhaps, given element is not ' \
+                                    'defined in schema of your version. Check new version of schemas on CISecurity: ' \
+                                    'https://github.com/CISecurity/OVAL '
 
             else:
-                print('There is no additional info for this error.')
-            return False
-        return True
+                self.ERR_MESSAGE += '\nThere is no additional info on this error.'
 
-    def wrap_schema(self, xml_path, xsd_path) -> str:
+            for m in self.ERR_MESSAGE.split('\n'):
+                self.e_log.error(m)
+            return -1, self.ERR_MESSAGE
+
+        self.i_log.info('Validation successful')
+        return 0, ''
+
+    def wrap_schema(self, xml_path, xsd_path) -> tuple:
         """
         This method will check used OVAL xml namespaces in definition and then concatenate appropriate schema
         files in one "Wrapper" file.
 
         :param xml_path: OVAL definition file for validation
         :param xsd_path: Folder with XML schemas for validation
-        :return: path to "Wrapper" file
+        :return: tuple CODE, RESULT (if code is -1 the result is error message)
         """
 
         # checking namespaces used in OVAL xml config
         schema_namespaces = self.check_namespaces(xml_path)
-        print('Imported namespaces: ' + str(schema_namespaces))
+
+        if not schema_namespaces[0] == 0:
+            self.e_log.error('Error occurred while checking schema namespaces')
+            return -1, self.ERR_MESSAGE
+        schema_namespaces = schema_namespaces[1]
+        self.i_log.info('Imported namespaces: ' + str(schema_namespaces))
+
         # generate wrapper with those namespaces
         wrapper_path = self.generate_wrapper(xsd_path, schema_namespaces)
-        print('Generated wrapper for imported namespaces.')
+        if not wrapper_path[0] == 0:
+            self.e_log.error('Unable to get wrapper path, cancelling creation of wrapper file')
+            return -1, self.ERR_MESSAGE
 
-        return wrapper_path
+        wrapper_path = wrapper_path[1]
+        self.i_log.info('Generated wrapper for imported namespaces.')
 
-    def check_namespaces(self, xml_path) -> list:
+        return 0, wrapper_path
+
+    def check_namespaces(self, xml_path) -> tuple:
         """
         Check used namespaces in OVAL definition.
 
         :param xml_path: OVAL definition with some namespaces.
-        :return: list of schema's namespaces
+        :return: tuple CODE, RESULT (if code is -1 the result is error message)
         """
         schema_namespaces = []
-        print('Checking for imported namespaces in definition...')
+        self.i_log.info('Checking for imported namespaces in definition...')
 
         with open(xml_path, 'r', encoding=self.DEFAULT_ENCODING) as file:
             for line in file:
@@ -137,18 +163,21 @@ class Validator:
                             # there will be A LOT of exceptions for IndexError
                             pass
                         except Exception as e:
-                            print("Exception occurred while checking imported namespaces: " + str(e))
-        schema_namespaces = list(set(schema_namespaces))
-        return schema_namespaces
+                            self.ERR_MESSAGE = 'Exception occurred while checking imported namespaces: ' + str(e)
+                            self.e_log.error(self.ERR_MESSAGE)
+                            return -1, self.ERR_MESSAGE
 
-    def generate_wrapper(self, xsd_path, schema_namespaces) -> os.path:
+        schema_namespaces = list(set(schema_namespaces))
+        return 0, schema_namespaces
+
+    def generate_wrapper(self, xsd_path, schema_namespaces) -> tuple:
         """
         Method for actually creating the "Wrapper" file. It takes path to schema folder and list of namespaces to
         create one file with all those namespaces which will be used for validation afterwars.
 
         :param xsd_path: Schema folder
         :param schema_namespaces: List of namespaces
-        :return: path to the Wrapper file
+        :return: tuple CODE, RESULT (if code is -1 the result is error message)
         """
         # check if path specified without / at the end
         regex = re.compile(os.sep + r'$')
@@ -168,13 +197,11 @@ class Validator:
                 if needed_schema == ns:
                     namespace_exists = True
             if not namespace_exists:
-                print(f'''
-                ERROR COLLECTING SCHEMAS:
-                Schema for namespace {needed_schema} does not exists.
-                Perhaps, given element is not defined in schema of your version.
-                Check new version of OVAL schemas on CISecurity: https://github.com/CISecurity/OVAL
-                ''')
-                return None
+                self.ERR_MESSAGE = f"ERROR COLLECTING SCHEMAS: Schema for namespace {needed_schema} does not exists. " \
+                                   f"Perhaps, given element is not defined in schema of your version. Check new " \
+                                   f"version of OVAL schemas on CISecurity: https://github.com/CISecurity/OVAL "
+                self.e_log.error(self.ERR_MESSAGE)
+                return -1, self.ERR_MESSAGE
 
         # wrapping all needed schemas in one XSD file with multiple imports
         with open(wrapper_path, 'w') as file:
@@ -193,7 +220,7 @@ class Validator:
                 else:
                     to_import = False
                     for used_schema in schema_namespaces:
-                        if re.match(used_schema+'-', schema):
+                        if re.match(used_schema + '-', schema):
                             to_import = True
                             break
                     if not to_import:
@@ -202,32 +229,31 @@ class Validator:
                 if not re.match(r'^oval-', schema):  # if this is not common oval namespace then change namespace
                     family = '#' + str(schema.split('-')[0])
 
-                import_line = f'<xsd:import namespace="{self.DEFAULT_NAMESPACE+family}" schemaLocation="{schema}"/>\n'
+                import_line = f'<xsd:import namespace="{self.DEFAULT_NAMESPACE + family}" schemaLocation="{schema}"/>\n'
                 file.write(import_line)
             # header closed
             file.write('</xsd:schema>')
 
-        return wrapper_path
+        return 0, wrapper_path
 
-    def clear_wrapper(self):
+    def clear_wrapper(self) -> None:
         """
         Delete wrapper file used for validation.
         """
         try:
             os.remove(os.path.relpath(self.WRAPPER_PATH))
-            print('Removed wrapper file ' + self.WRAPPER_PATH)
+            self.i_log.info('Removed wrapper file ' + self.WRAPPER_PATH)
         except Exception as e:
-            print(str(e))
+            self.e_log.error('Error deleting wrapper file: '+str(e))
 
-    @staticmethod
-    def check_schema_version(xsd_path):
+    def check_schema_version(self, xsd_path) -> None:
         """
         Check OVAL schema's version. It will find the file oval-definitions-schema and search it
         for version line. Apparently, this version is a version for all schemas files in
         specified schema folder.
+        It will print version in logs.
 
         :param xsd_path: schema folder
-        :return: None
         """
         path = xsd_path
         regex = re.compile(r'.*' + os.sep + os.sep + '$')
@@ -240,17 +266,16 @@ class Validator:
             tree = ET.parse(path)
             root = tree.getroot()
             v = rs.search_one(root, 'version')
-            print("Found schema version " + v.text)
+            self.i_log.info("Found schema version " + v.text)
         except Exception as e:
-            print('Unable to check schema version: ' + str(e))
+            self.e_log.error('Unable to check schema version: ' + str(e))
 
-    @staticmethod
-    def check_definition_version(xml_path):
+    def check_definition_version(self, xml_path) -> None:
         """
         Check OVAL definition's schema version. It will check version specified in generator tag.
+        It will print version in logs.
 
         :param xml_path: OVAL definition file
-        :return: None
         """
         try:
             rs = RecursiveXMLSearcher()
@@ -258,6 +283,6 @@ class Validator:
             root = tree.getroot()
             v = rs.search_one(root, 'generator')
             v = rs.search_one(v, 'schema_version')
-            print("Found definition version " + v.text)
+            self.i_log.info("Found definition version " + v.text)
         except Exception as e:
-            print('Unable to check definition version: ' + str(e))
+            self.e_log.error('Unable to check definition version: ' + str(e))
