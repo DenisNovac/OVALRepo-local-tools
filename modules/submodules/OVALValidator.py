@@ -20,7 +20,7 @@ class OVALValidator:
     WRAPPER_PATH = ''
     DEFAULT_ENCODING = 'UTF-8'
 
-    def __init__(self):
+    def __init__(self, error_file=None):
         """
         Initialize loggers
         """
@@ -33,6 +33,8 @@ class OVALValidator:
         handler.setFormatter(logging.Formatter(format_str))
         self.e_log.addHandler(handler)
         self.i_log.addHandler(handler)
+        if error_file:
+            self.e_log.addHandler(logging.FileHandler(error_file))
 
     def validate(self, xml_path, xsd_path) -> bool:
         """
@@ -74,32 +76,31 @@ class OVALValidator:
             self.i_log.info('Validation starting...')
             xsd.assertValid(xml_doc)
         except etree.DocumentInvalid as e:
-            err_message = f'Validation failure: {e}'
+            err_message = f'Validation failure for {xml_path}: {e}'
 
             if re.search('No match found for key-sequence', str(e)):
                 element = re.split('No match found for key-sequence', str(e))[1]
                 element = re.split('of keyref', element)[0]
                 element = element.replace('[\'', '').replace('\']', '')
-                err_message += f'\n Perhaps, element refers to ID that is not exists. Check existence of element ' \
-                               f'with ID  {element.strip()} '
+                err_message += f'  (Perhaps, element refers to ID that is not exists. Check existence of element ' \
+                               f'with ID  {element.strip()})'
 
             elif re.search('This element is not expected', str(e)):
-                err_message += f'\nPerhaps, given element is not defined in schema of your version or you ' \
+                err_message += f'  (Perhaps, given element is not defined in schema of your version or you ' \
                                f'misplaced some elements. The right order: definitions, tests, objects, states, ' \
                                f'variables. Check new version of schemas on CISecurity: ' \
-                               f'https://github.com/CISecurity/OVAL '
+                               f'https://github.com/CISecurity/OVAL)'
 
             elif re.search('not an element of the set', str(e)):
                 attr = re.search(r'attribute \'(\w*)', str(e)).group(1)
                 elem = re.search(r'The value \'(\w*)\' is not an element of the set', str(e)).group(1)
-                err_message += f'\nThere is no {attr} = {elem}  in your schema. Perhaps, given element is not ' \
+                err_message += f'  (There is no {attr} = {elem}  in your schema. Perhaps, given element is not ' \
                                'defined in schema of your version. Check new version of schemas on CISecurity: ' \
-                               'https://github.com/CISecurity/OVAL '
+                               'https://github.com/CISecurity/OVAL)'
             else:
-                err_message += '\nThere is no additional info on this error.'
+                err_message += '  (There is no additional info on this error.)'
 
-            for m in err_message.split('\n'):
-                self.e_log.error(m)
+            self.e_log.error(err_message)
             return False
         self.i_log.info('Validation successful')
         return True
