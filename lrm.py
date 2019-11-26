@@ -20,17 +20,16 @@ def main():
     """
     Initializing root logger and start ArgumentParser
     """
+    # root loggers for LRM app
+    e_log = logging.getLogger('lrm_error')
+    e_log.setLevel(logging.ERROR)
+    i_log = logging.getLogger('lrm_info')
+    i_log.setLevel(logging.INFO)
+
     handler = logging.StreamHandler()
-    # Readable format for all loggers in app
     format_str = '%(asctime)s\t%(levelname)s [%(processName)s %(filename)s:%(lineno)s] %(message)s'
     handler.setFormatter(logging.Formatter(format_str))
-
-    e_log = logging.getLogger()
-    e_log.setLevel(logging.ERROR)
     e_log.addHandler(handler)
-
-    i_log = logging.getLogger()
-    i_log.setLevel(logging.INFO)
     i_log.addHandler(handler)
 
     ArgumentsParser.parse_arguments()

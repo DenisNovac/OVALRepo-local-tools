@@ -7,7 +7,7 @@ import modules.decompose_definition as decompose_definition
 # custom modules
 import modules.list_repository as list_repository
 import modules.timestamp_definition as timestamp_definition
-import modules.validate_definition as validate_definition
+import modules.validate_oval_content as validate_oval_content
 
 
 class ArgumentsParser:
@@ -103,7 +103,7 @@ class ArgumentsParser:
         parser_validate = subparsers.add_parser('v', help='Validate OVAL definition with schema.')
         parser_validate.add_argument('xml', help='Path to OVAL definition')
         parser_validate.add_argument('xsd', help='Path to schema FOLDER. Default: version 5.10.1.')
-        parser_validate.set_defaults(func=validate_definition.validate_definition)
+        parser_validate.set_defaults(func=validate_oval_content.validate_oval_content)
 
         """Parser for timestamp_definition module"""
         parser = argparse.ArgumentParser(description='This tool will automatically check the oval_repository field '
@@ -120,5 +120,6 @@ class ArgumentsParser:
         args = main_parser.parse_args()
         try:
             args.func(args)
-        except AttributeError:
+        except AttributeError as e:
+            raise e
             main_parser.print_help()
