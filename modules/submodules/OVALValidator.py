@@ -50,7 +50,7 @@ class OVALValidator:
             raise Exception(err_message)
 
         self.check_schema_version(xsd_path)
-        self.check_definition_version(xml_path)
+        self.check_content_version(xml_path)
 
         # getting one schema from importing needed in one file
         wrapper_path = self.wrap_schema(xml_path, xsd_path)
@@ -269,11 +269,11 @@ class OVALValidator:
             tree = ET.parse(path)
             root = tree.getroot()
             v = rs.search_one(root, 'version')
-            self.i_log.info("Found schema version " + v.text)
+            self.i_log.info("Found OVAL schema version " + v.text)
         except Exception as e:
             self.e_log.error('Unable to check schema version: ' + str(e))
 
-    def check_definition_version(self, xml_path) -> None:
+    def check_content_version(self, xml_path) -> None:
         """
         Check OVAL definition's schema version. It will check version specified in generator tag.
         It will print version in logs.
@@ -284,8 +284,14 @@ class OVALValidator:
             rs = RecursiveXMLSearcher()
             tree = ET.parse(xml_path)
             root = tree.getroot()
+
+            content = 'OVAL content'
+            content_name = re.search(r'(?P<content>(definitions|results|system-characteristics))', str(root))
+            if content_name:
+                content = 'OVAL '+content_name.group('content')
+
             v = rs.search_one(root, 'generator')
             v = rs.search_one(v, 'schema_version')
-            self.i_log.info("Found definition version " + v.text)
+            self.i_log.info(f"Found {content} version " + v.text)
         except Exception as e:
             self.e_log.error('Unable to check definition version: ' + str(e))

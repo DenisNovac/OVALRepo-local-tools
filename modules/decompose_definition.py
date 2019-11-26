@@ -78,7 +78,10 @@ def decompose_definition():
 
 
 def print_own_help():
-    help_message = '''Additional info for decompose: 
+    help_message = '''
+    Separates an OVAL file into its component parts and saves them to repository.
+    
+    Additional info for decompose: 
     -f may also include a folder (no spaces in name allowed). All definitions in folder will be decomposed
     -v verbose output (print all created/replaced files)
     -r remove decomposed files to .decompose folder
