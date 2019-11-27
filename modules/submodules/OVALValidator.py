@@ -30,11 +30,14 @@ class OVALValidator:
         self.i_log.setLevel(logging.INFO)
         handler = logging.StreamHandler()
         format_str = '%(asctime)s\t%(levelname)s [%(processName)s %(filename)s:%(lineno)s] %(message)s'
-        handler.setFormatter(logging.Formatter(format_str))
+        formatter = logging.Formatter(format_str)
+        handler.setFormatter(formatter)
         self.e_log.addHandler(handler)
         self.i_log.addHandler(handler)
         if error_file:
-            self.e_log.addHandler(logging.FileHandler(error_file))
+            fh = logging.FileHandler(error_file)
+            fh.setFormatter(formatter)
+            self.e_log.addHandler(fh)
 
     def validate(self, xml_path, xsd_path) -> bool:
         """
