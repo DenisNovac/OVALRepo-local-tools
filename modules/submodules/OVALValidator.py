@@ -104,6 +104,12 @@ class OVALValidator:
                 err_message += '  (There is no additional info on this error.)'
 
             self.e_log.error(err_message)
+            # warning for WONTFIX bug:
+            # https://bugzilla.gnome.org/show_bug.cgi?id=325533
+            # https://bugs.launchpad.net/lxml/+bug/674775
+            # https://stackoverflow.com/questions/19826050/is-it-possible-to-show-line-numbers-more-than-65535-when-you-validate-an-xml-fil
+            if '65535' in str(e):
+                self.e_log.error('Be cautious: line number 65535 is incorrect - usually it is > 65535. See bug of libxml2: https://bugzilla.gnome.org/show_bug.cgi?id=325533')
             return False
         self.i_log.info('Validation successful')
         return True
