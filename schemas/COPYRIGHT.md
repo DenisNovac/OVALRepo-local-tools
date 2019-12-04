@@ -1,7 +1,8 @@
 https://github.com/CISecurity/OVALRepo
 https://oval.cisecurity.org/terms
 https://github.com/OVALProject/Language
-https://sourceforge.net/projects/ovaldi/
+https://sourceforge.net/projects/ovaldi/ - schema 5.10.1
+https://github.com/OpenSCAP/openscap - schemas 5.10.1, 5.11.1, 5.11.2 
 
 Copyright© 2010 United States Government. All Rights Reserved.
 

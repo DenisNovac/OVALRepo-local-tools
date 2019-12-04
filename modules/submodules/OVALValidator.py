@@ -211,11 +211,21 @@ class OVALValidator:
             # header
             file.write(
                 '<?xml version="1.0" encoding="UTF-8"?>\n<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">\n')
+            
 
             for schema in schemas:
                 # don't let wrapper to import itself
                 if schema == self.WRAPPER_NAME:
                     continue
+                if 'xsl' in schema:  # do not take schematrons in imports
+                    continue
+                # xmldsig originally was placed in OpenSCAP outside of folder with OVAL schemas 5.10.1
+                if 'xmldsig' in schema:  
+                    file.write(
+                        '<xsd:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="xmldsig-core-schema.xsd"/>'
+                    )
+                    continue
+
                 # import all common oval schemas (starts with oval-)
                 if re.match(r'oval-', schema):
                     pass
