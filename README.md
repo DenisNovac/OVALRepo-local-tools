@@ -18,7 +18,7 @@ This tool adds features:
 
 - list repository by type of file (definitions, tests, etc);
 
-- add valid `<oval_repository>` tag to file;
+- add valid `<oval_repository>` tag to file or folder;
 
 - validate definition with xsd-schemas.
 
