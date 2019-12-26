@@ -1,10 +1,10 @@
 import argparse
 import sys
 
+# custom modules
 import modules.build_definition as build_definition
 import modules.clear_repository as clear_repository
 import modules.decompose_definition as decompose_definition
-# custom modules
 import modules.list_repository as list_repository
 import modules.timestamp_definition as timestamp_definition
 import modules.validate_oval_content as validate_oval_content
@@ -120,6 +120,5 @@ class ArgumentsParser:
         args = main_parser.parse_args()
         try:
             args.func(args)
-        except AttributeError as e:
-            raise e
+        except AttributeError:
             main_parser.print_help()
